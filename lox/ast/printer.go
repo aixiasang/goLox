@@ -61,6 +61,25 @@ func (p *AstPrinter) VisitLogicalExpr(expr *Logical) interface{} {
 	return p.parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right)
 }
 
+// VisitCallExpr 访问函数调用表达式
+func (p *AstPrinter) VisitCallExpr(expr *Call) interface{} {
+	var builder strings.Builder
+
+	builder.WriteString(fmt.Sprintf("%v", expr.Callee.Accept(p)))
+	builder.WriteString("(")
+
+	for i, arg := range expr.Arguments {
+		if i > 0 {
+			builder.WriteString(", ")
+		}
+		builder.WriteString(fmt.Sprintf("%v", arg.Accept(p)))
+	}
+
+	builder.WriteString(")")
+
+	return builder.String()
+}
+
 // parenthesize 将表达式转换为带括号的形式
 func (p *AstPrinter) parenthesize(name string, exprs ...Expr) string {
 	var builder strings.Builder

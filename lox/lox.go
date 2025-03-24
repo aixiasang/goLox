@@ -15,6 +15,7 @@ import (
 type Lox struct {
 	errorReporter errorp.Reporter
 	interpreter   *interpreter.Interpreter
+	debug         bool // 调试模式标志
 }
 
 // NewLox 创建一个新的Lox解释器实例
@@ -25,7 +26,13 @@ func NewLox() *Lox {
 	return &Lox{
 		errorReporter: errorReporter,
 		interpreter:   interpreter,
+		debug:         false, // 默认关闭调试模式
 	}
+}
+
+// SetDebug 设置调试模式
+func (l *Lox) SetDebug(debug bool) {
+	l.debug = debug
 }
 
 // Run 执行给定的源代码
@@ -34,12 +41,16 @@ func (l *Lox) Run(source string) {
 	l.errorReporter.ResetError()
 
 	// 扫描标记
-	scanner := scanner.NewScanner(source, l.errorReporter)
-	tokens := scanner.ScanTokens()
+	s := scanner.NewScanner(source, l.errorReporter)
+	// 设置scanner的调试模式
+	s.SetDebug(l.debug)
+	tokens := s.ScanTokens()
 
 	// 解析语句
-	parser := parser.NewParser(tokens, l.errorReporter)
-	statements := parser.Parse()
+	p := parser.NewParser(tokens, l.errorReporter)
+	// 设置解析器的调试模式
+	p.SetDebug(l.debug)
+	statements := p.Parse()
 
 	// 如果有语法错误,停止解释
 	if l.errorReporter.HasError() {

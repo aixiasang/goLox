@@ -1,0 +1,12 @@
+// 参数传递测试 - 双参数函数
+
+// 双参数函数
+fun addNumbers(a, b) {
+  print "函数名: addNumbers";
+  print "参数a: " + a;
+  print "参数b: " + b;
+  print "结果: " + (a + b);
+}
+
+// 调用双参数函数
+addNumbers(10, 20);

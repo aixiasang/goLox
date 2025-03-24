@@ -1,0 +1,17 @@
+// 函数实现测试
+fun single(a) {
+  print "单参数函数";
+  print "参数值: " + a;
+}
+
+single(100);
+
+fun add(a, b) {
+  return a + b;
+}
+
+// 直接打印函数调用结果
+print add(10, 20);
+
+// 字符串拼接打印
+print "10 + 20 = " + add(10, 20); 

@@ -1,0 +1,132 @@
+// 高级递归和函数返回值测试
+
+// 经典递归：斐波那契数列
+fun fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+// 显示计算过程的斐波那契数列
+fun traceFibonacci(n) {
+  print "计算 fibonacci(" + n + ")";
+  
+  if (n <= 1) {
+    print "fibonacci(" + n + ") = " + n;
+    return n;
+  }
+  
+  var fib1 = traceFibonacci(n - 1);
+  var fib2 = traceFibonacci(n - 2);
+  var result = fib1 + fib2;
+  
+  print "fibonacci(" + n + ") = " + fib1 + " + " + fib2 + " = " + result;
+  return result;
+}
+
+// 尾递归：阶乘
+fun factorial(n) {
+  if (n <= 1) return 1;
+  return n * factorial(n - 1);
+}
+
+// 尾递归优化版本的阶乘（模拟）
+fun tailFactorial(n) {
+  fun factorialHelper(n, acc) {
+    if (n <= 1) return acc;
+    return factorialHelper(n - 1, n * acc);
+  }
+  
+  return factorialHelper(n, 1);
+}
+
+// 递归计算幂
+fun power(base, exponent) {
+  if (exponent == 0) return 1;
+  return base * power(base, exponent - 1);
+}
+
+// 二分优化的幂计算
+fun fastPower(base, exponent) {
+  if (exponent == 0) return 1;
+  if (exponent == 1) return base;
+  
+  var half = fastPower(base, exponent / 2);
+  
+  if (exponent % 2 == 0) {
+    return half * half;
+  } else {
+    return base * half * half;
+  }
+}
+
+// 递归计算最大公约数
+fun gcd(a, b) {
+  if (b == 0) return a;
+  return gcd(b, a % b);
+}
+
+// 测试返回函数
+fun makeMultiplier(factor) {
+  fun multiply(x) {
+    return x * factor;
+  }
+  
+  return multiply;
+}
+
+// 递归生成数组（模拟）
+fun makeArray(n) {
+  if (n <= 0) {
+    fun emptyArray(index) {
+      return nil;
+    }
+    return emptyArray;
+  }
+  
+  var rest = makeArray(n - 1);
+  
+  fun array(index) {
+    if (index == n - 1) return n - 1;
+    return rest(index);
+  }
+  
+  return array;
+}
+
+// 运行测试
+print "斐波那契数列:";
+for (var i = 0; i < 10; i = i + 1) {
+  print "fibonacci(" + i + ") = " + fibonacci(i);
+}
+
+print "\n追踪斐波那契计算过程:";
+traceFibonacci(4);
+
+print "\n阶乘计算:";
+for (var i = 0; i < 5; i = i + 1) {
+  print i + "! = " + factorial(i);
+}
+
+print "\n尾递归优化的阶乘:";
+for (var i = 0; i < 5; i = i + 1) {
+  print i + "! = " + tailFactorial(i);
+}
+
+print "\n幂计算:";
+print "2^8 = " + power(2, 8);
+print "2^10 = " + fastPower(2, 10);
+
+print "\n最大公约数:";
+print "gcd(48, 18) = " + gcd(48, 18);
+
+print "\n闭包乘法器:";
+var double = makeMultiplier(2);
+var triple = makeMultiplier(3);
+print "double(5) = " + double(5);
+print "triple(5) = " + triple(5);
+
+print "\n模拟数组:";
+var arr = makeArray(5);
+for (var i = 0; i < 5; i = i + 1) {
+  print "arr(" + i + ") = " + arr(i);
+} 

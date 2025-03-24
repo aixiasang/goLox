@@ -1,6 +1,7 @@
 package scanner
 
 import (
+	"fmt"
 	"strconv"
 	"unicode"
 
@@ -16,6 +17,7 @@ type Scanner struct {
 	current int            // 当前字符的位置
 	line    int            // 当前行号
 	errors  error.Reporter // 错误报告器
+	debug   bool           // 调试模式标志
 }
 
 // 关键字映射表
@@ -48,6 +50,19 @@ func NewScanner(source string, errors error.Reporter) *Scanner {
 		current: 0,
 		line:    1,
 		errors:  errors,
+		debug:   false, // 默认关闭调试模式
+	}
+}
+
+// SetDebug 设置调试模式
+func (s *Scanner) SetDebug(debug bool) {
+	s.debug = debug
+}
+
+// 调试输出辅助函数
+func (s *Scanner) debugPrintf(format string, args ...interface{}) {
+	if s.debug {
+		fmt.Printf(format, args...)
 	}
 }
 
@@ -77,6 +92,7 @@ func (s *Scanner) scanToken() {
 	case '}':
 		s.addToken(token.RIGHT_BRACE)
 	case ',':
+		s.debugPrintf("发现逗号标记，行: %d\n", s.line)
 		s.addToken(token.COMMA)
 	case '.':
 		s.addToken(token.DOT)

@@ -1,0 +1,3 @@
+// 测试内置的clock函数
+print "Clock函数测试:";
+print clock(); 

@@ -118,3 +118,21 @@ func (p *RpnPrinter) VisitLogicalExpr(expr *Logical) interface{} {
 
 	return builder.String()
 }
+
+// VisitCallExpr 访问函数调用表达式
+func (p *RpnPrinter) VisitCallExpr(expr *Call) interface{} {
+	var builder strings.Builder
+
+	// 先添加所有参数
+	for _, arg := range expr.Arguments {
+		builder.WriteString(fmt.Sprintf("%v ", arg.Accept(p)))
+	}
+
+	// 再添加被调用的表达式
+	builder.WriteString(fmt.Sprintf("%v ", expr.Callee.Accept(p)))
+
+	// 添加call操作及参数数量
+	builder.WriteString(fmt.Sprintf("call(%d)", len(expr.Arguments)))
+
+	return builder.String()
+}

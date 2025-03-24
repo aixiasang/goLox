@@ -1,0 +1,544 @@
+// =============================================================
+// GoLox Interpreter Basic Test File
+// This file tests all implemented features with ASCII-only text
+// =============================================================
+
+print "======== Basic Data Types ========";
+
+// 1. Number tests
+print "\n--- Number Tests ---";
+print "Integer: " + 42;
+print "Negative: " + (-42);
+print "Decimal: " + 3.14159;
+print "Large number: " + 1000000;
+print "Decimal calculation: " + (10.5 + 20.7);
+
+// 2. String tests
+print "\n--- String Tests ---";
+print "Basic string: \"Hello, World!\"";
+print "String concatenation: " + "Hello, " + "World!";
+print "Empty string: " + "";
+print "Escape chars: quotes(\") and newlines(\\n)";
+print "Mixed content: " + "number" + 42 + "in string";
+
+// 3. Boolean tests
+print "\n--- Boolean Tests ---";
+print "True value: " + true;
+print "False value: " + false;
+print "NOT operation: " + !true + ", " + !false;
+
+// 4. nil tests
+print "\n--- Nil Tests ---";
+print "Nil value: " + nil;
+var uninitializedVar;
+print "Uninitialized variable: " + uninitializedVar;
+
+// =============================================================
+print "\n======== Variable Declaration and Assignment ========";
+
+// 1. Variable declaration
+print "\n--- Variable Declaration ---";
+var a = 10;
+var b = 20;
+var sum = a + b;
+print "a = " + a + ", b = " + b + ", sum = " + sum;
+
+// 2. Variable assignment
+print "\n--- Variable Assignment ---";
+a = 100;
+b = 200;
+sum = a + b;
+print "After reassignment: a = " + a + ", b = " + b + ", sum = " + sum;
+
+// 3. Chained assignment
+print "\n--- Chained Assignment ---";
+var x = 1;
+var y = 2;
+var z = 3;
+print "Initial values: x = " + x + ", y = " + y + ", z = " + z;
+x = y = z = 42;
+print "After chained assignment: x = " + x + ", y = " + y + ", z = " + z;
+
+// =============================================================
+print "\n======== Arithmetic Operations ========";
+
+// 1. Basic operations
+print "\n--- Basic Operations ---";
+print "Addition: 5 + 3 = " + (5 + 3);
+print "Subtraction: 5 - 3 = " + (5 - 3);
+print "Multiplication: 5 * 3 = " + (5 * 3);
+print "Division: 5 / 3 = " + (5 / 3);
+print "Modulo: 5 % 3 = " + (5 % 3);
+
+// 2. Compound operations
+print "\n--- Compound Operations ---";
+print "Compound expression: 2 + 3 * 4 = " + (2 + 3 * 4);
+print "Parenthesized expression: (2 + 3) * 4 = " + ((2 + 3) * 4);
+print "Negative numbers: -5 + 10 = " + (-5 + 10);
+print "Sequential operations: 10 - 5 - 3 = " + (10 - 5 - 3);
+
+// 3. Mixed type operations
+print "\n--- Mixed Type Operations ---";
+print "Number + String: " + (5 + " apples");
+print "Boolean + Number: " + (true + 1);
+print "Boolean + String: " + (false + " statement");
+
+// =============================================================
+print "\n======== Logical Operations ========";
+
+// 1. Basic logical operations
+print "\n--- Basic Logical Operations ---";
+print "AND: true and true = " + (true and true);
+print "AND: true and false = " + (true and false);
+print "AND: false and true = " + (false and true);
+print "AND: false and false = " + (false and false);
+
+print "OR: true or true = " + (true or true);
+print "OR: true or false = " + (true or false);
+print "OR: false or true = " + (false or true);
+print "OR: false or false = " + (false or false);
+
+print "NOT: !true = " + (!true);
+print "NOT: !false = " + (!false);
+
+// 2. Short-circuit logic
+print "\n--- Short-circuit Logic ---";
+var didRun = false;
+
+// Define a function with side effects
+fun setRan() {
+  didRun = true;
+  return true;
+}
+
+// Test short-circuit AND
+didRun = false;
+var result = false and setRan();
+print "false and setRan(): result = " + result + ", didRun = " + didRun;
+
+didRun = false;
+result = true and setRan();
+print "true and setRan(): result = " + result + ", didRun = " + didRun;
+
+// Test short-circuit OR
+didRun = false;
+result = true or setRan();
+print "true or setRan(): result = " + result + ", didRun = " + didRun;
+
+didRun = false;
+result = false or setRan();
+print "false or setRan(): result = " + result + ", didRun = " + didRun;
+
+// 3. Compound logical operations
+print "\n--- Compound Logical Operations ---";
+print "(true and false) or true = " + ((true and false) or true);
+print "true and (false or true) = " + (true and (false or true));
+print "!(true and false) = " + (!(true and false));
+
+// =============================================================
+print "\n======== Comparison Operations ========";
+
+// 1. Number comparisons
+print "\n--- Number Comparisons ---";
+print "Equal: 5 == 5 = " + (5 == 5);
+print "Equal: 5 == 6 = " + (5 == 6);
+print "Not equal: 5 != 6 = " + (5 != 6);
+print "Not equal: 5 != 5 = " + (5 != 5);
+print "Greater than: 5 > 3 = " + (5 > 3);
+print "Greater than: 5 > 5 = " + (5 > 5);
+print "Greater than or equal: 5 >= 5 = " + (5 >= 5);
+print "Greater than or equal: 5 >= 6 = " + (5 >= 6);
+print "Less than: 3 < 5 = " + (3 < 5);
+print "Less than: 5 < 5 = " + (5 < 5);
+print "Less than or equal: 5 <= 5 = " + (5 <= 5);
+print "Less than or equal: 6 <= 5 = " + (6 <= 5);
+
+// 2. String comparisons
+print "\n--- String Comparisons ---";
+print "String equal: \"hello\" == \"hello\" = " + ("hello" == "hello");
+print "String equal: \"hello\" == \"world\" = " + ("hello" == "world");
+print "String not equal: \"hello\" != \"world\" = " + ("hello" != "world");
+
+// 3. Mixed type comparisons
+print "\n--- Mixed Type Comparisons ---";
+print "Different types: 42 == \"42\" = " + (42 == "42");
+print "Nil comparison: nil == nil = " + (nil == nil);
+print "Boolean comparison: true == true = " + (true == true);
+print "Boolean and number: true == 1 = " + (true == 1);
+
+// =============================================================
+print "\n======== Ternary Operator ========";
+
+print "\n--- Basic Ternary Operator ---";
+print "true ? \"yes\" : \"no\" = " + (true ? "yes" : "no");
+print "false ? \"yes\" : \"no\" = " + (false ? "yes" : "no");
+
+print "\n--- Compound Ternary Operator ---";
+print "5 > 3 ? \"greater\" : \"not greater\" = " + (5 > 3 ? "greater" : "not greater");
+print "5 < 3 ? 10 : 20 = " + (5 < 3 ? 10 : 20);
+
+print "\n--- Nested Ternary Operator ---";
+print "true ? (false ? 1 : 2) : 3 = " + (true ? (false ? 1 : 2) : 3);
+print "(5 > 3) ? (2 > 1 ? \"a\" : \"b\") : \"c\" = " + ((5 > 3) ? (2 > 1 ? "a" : "b") : "c");
+
+// =============================================================
+print "\n======== Control Flow ========";
+
+// 1. if statements
+print "\n--- If Statements ---";
+if (true) {
+  print "if statement success: true condition";
+}
+
+if (false) {
+  print "never executed";
+} else {
+  print "if-else statement success: false condition";
+}
+
+if (false) {
+  print "never executed";
+} else if (true) {
+  print "if-else-if statement success: second condition true";
+} else {
+  print "never executed";
+}
+
+if (false) {
+  print "never executed";
+} else if (false) {
+  print "never executed";
+} else {
+  print "if-else-if-else statement success: all conditions false";
+}
+
+// Nested if
+if (true) {
+  if (true) {
+    print "nested if statement success: both conditions true";
+  }
+}
+
+// 2. while loops
+print "\n--- While Loops ---";
+var counter = 0;
+while (counter < 5) {
+  print "while loop #" + counter;
+  counter = counter + 1;
+}
+
+// Nested while
+print "\n--- Nested While Loops ---";
+var i = 0;
+while (i < 3) {
+  var j = 0;
+  while (j < 2) {
+    print "nested while loop: i=" + i + ", j=" + j;
+    j = j + 1;
+  }
+  i = i + 1;
+}
+
+// 3. for loops
+print "\n--- For Loops ---";
+for (var k = 0; k < 5; k = k + 1) {
+  print "for loop #" + k;
+}
+
+// Nested for
+print "\n--- Nested For Loops ---";
+for (var m = 0; m < 3; m = m + 1) {
+  for (var n = 0; n < 2; n = n + 1) {
+    print "nested for loop: m=" + m + ", n=" + n;
+  }
+}
+
+// Complex for loop header
+print "\n--- Complex For Loop ---";
+for (var p = 0, q = 10; p < q; p = p + 1, q = q - 1) {
+  print "complex for loop: p=" + p + ", q=" + q;
+}
+
+// 4. break statements
+print "\n--- Break Statements ---";
+// break in while loop
+counter = 0;
+while (counter < 10) {
+  print "break test: counter=" + counter;
+  counter = counter + 1;
+  if (counter >= 5) {
+    print "reached 5, breaking out of loop";
+    break;
+  }
+}
+
+// break in for loop
+print "\n--- Break in For Loop ---";
+for (var r = 0; r < 10; r = r + 1) {
+  print "for break test: r=" + r;
+  if (r >= 5) {
+    print "reached 5, breaking out of for loop";
+    break;
+  }
+}
+
+// break in nested loops
+print "\n--- Break in Nested Loops ---";
+for (var s = 0; s < 3; s = s + 1) {
+  print "outer loop: s=" + s;
+  for (var t = 0; t < 3; t = t + 1) {
+    print "  inner loop: t=" + t;
+    if (t >= 1) {
+      print "  inner loop reached 1, breaking inner loop";
+      break;
+    }
+  }
+}
+
+// =============================================================
+print "\n======== Functions ========";
+
+// 1. Basic function definition and calling
+print "\n--- Basic Functions ---";
+fun sayHello() {
+  print "Hello, World!";
+}
+
+sayHello();
+
+// Function with parameters
+fun greet(name) {
+  print "Hello, " + name + "!";
+}
+
+greet("Alice");
+greet("Bob");
+
+// Function with return value
+fun add(a, b) {
+  return a + b;
+}
+
+print "add(3, 4) = " + add(3, 4);
+
+// Function with multiple parameters
+fun calculateArea(width, height) {
+  return width * height;
+}
+
+print "calculateArea(5, 10) = " + calculateArea(5, 10);
+
+// 2. Recursive functions
+print "\n--- Recursive Functions ---";
+// Factorial function
+fun factorial(n) {
+  if (n <= 1) return 1;
+  return n * factorial(n - 1);
+}
+
+print "factorial(5) = " + factorial(5);
+
+// Fibonacci sequence
+fun fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+print "fibonacci(7) = " + fibonacci(7);
+
+// Greatest common divisor
+fun gcd(a, b) {
+  if (b == 0) return a;
+  return gcd(b, a % b);
+}
+
+print "gcd(48, 18) = " + gcd(48, 18);
+
+// 3. Closures
+print "\n--- Closures ---";
+fun makeCounter() {
+  var count = 0;
+  fun counter() {
+    count = count + 1;
+    return count;
+  }
+  return counter;
+}
+
+var counter1 = makeCounter();
+var counter2 = makeCounter();
+
+print "counter1() = " + counter1(); // 1
+print "counter1() = " + counter1(); // 2
+print "counter2() = " + counter2(); // 1
+print "counter1() = " + counter1(); // 3
+
+// Parameterized closure
+fun makeAdder(n) {
+  fun adder(x) {
+    return x + n;
+  }
+  return adder;
+}
+
+var add5 = makeAdder(5);
+var add10 = makeAdder(10);
+
+print "add5(3) = " + add5(3);  // 8
+print "add10(3) = " + add10(3);  // 13
+
+// 4. Higher-order functions
+print "\n--- Higher-order Functions ---";
+// Function as parameter
+fun applyTwice(fn, x) {
+  return fn(fn(x));
+}
+
+fun double(x) {
+  return x * 2;
+}
+
+fun square(x) {
+  return x * x;
+}
+
+print "applyTwice(double, 3) = " + applyTwice(double, 3);  // 12
+print "applyTwice(square, 3) = " + applyTwice(square, 3);  // 81
+
+// Function returning function
+fun compose(f, g) {
+  fun composed(x) {
+    return f(g(x));
+  }
+  return composed;
+}
+
+var doubleSquare = compose(double, square);
+var squareDouble = compose(square, double);
+
+print "doubleSquare(3) = " + doubleSquare(3);  // double(square(3)) = double(9) = 18
+print "squareDouble(3) = " + squareDouble(3);  // square(double(3)) = square(6) = 36
+
+// 5. Immediately invoked function expression (IIFE)
+print "\n--- IIFE ---";
+print "IIFE result: " + fun(x) { return x * x; }(4);  // 16
+
+// 6. Variable argument function simulation
+print "\n--- Variable Argument Simulation ---";
+fun sum(a, b, c) {
+  var result = 0;
+  if (a != nil) result = result + a;
+  if (b != nil) result = result + b;
+  if (c != nil) result = result + c;
+  return result;
+}
+
+print "sum(1) = " + sum(1, nil, nil);  // 1
+print "sum(1, 2) = " + sum(1, 2, nil);  // 3
+print "sum(1, 2, 3) = " + sum(1, 2, 3);  // 6
+
+// 7. Recursive data structure simulation
+print "\n--- Data Structure Simulation ---";
+fun makeList(n) {
+  fun get(i) {
+    if (i < 0 or i >= n) return nil;
+    return i;
+  }
+  return get;
+}
+
+var list = makeList(5);
+print "list(0) = " + list(0);
+print "list(2) = " + list(2);
+print "list(5) = " + list(5); // nil
+
+// =============================================================
+print "\n======== Scope ========";
+
+var global = "global variable";
+
+// 1. Basic scope
+print "\n--- Basic Scope ---";
+fun testScope() {
+  var local = "local variable";
+  print "Inside function: global = " + global;
+  print "Inside function: local = " + local;
+}
+
+testScope();
+print "Outside function: global = " + global;
+// print "Outside function: local = " + local; // Error, local variable not visible outside
+
+// 2. Nested scope
+print "\n--- Nested Scope ---";
+fun outer() {
+  var x = "outer x";
+  fun inner() {
+    var y = "inner y";
+    print "inner: x = " + x;
+    print "inner: y = " + y;
+  }
+  print "outer: x = " + x;
+  // print "outer: y = " + y; // Error, inner variable not visible outside
+  inner();
+}
+
+outer();
+
+// 3. Variable shadowing
+print "\n--- Variable Shadowing ---";
+var shadowed = "global shadowed";
+
+fun testShadowing() {
+  var shadowed = "local shadowed";
+  print "Inside function: shadowed = " + shadowed;
+}
+
+testShadowing();
+print "Outside function: shadowed = " + shadowed;
+
+// 4. Closure variables
+print "\n--- Closure Variables ---";
+fun makeClosure() {
+  var closed = "I am captured";
+  fun closure() {
+    print "In closure: closed = " + closed;
+    closed = "I was modified";
+  }
+  return closure;
+}
+
+var myClosure = makeClosure();
+myClosure();
+myClosure();
+
+// =============================================================
+print "\n======== Comprehensive Examples ========";
+
+// 1. Simple calculator
+print "\n--- Simple Calculator ---";
+fun calculator(operation) {
+  fun add(a, b) { return a + b; }
+  fun subtract(a, b) { return a - b; }
+  fun multiply(a, b) { return a * b; }
+  fun divide(a, b) { return a / b; }
+  
+  if (operation == "+") return add;
+  if (operation == "-") return subtract;
+  if (operation == "*") return multiply;
+  if (operation == "/") return divide;
+  
+  return nil;
+}
+
+var add = calculator("+");
+var subtract = calculator("-");
+var multiply = calculator("*");
+var divide = calculator("/");
+
+print "5 + 3 = " + add(5, 3);
+print "5 - 3 = " + subtract(5, 3);
+print "5 * 3 = " + multiply(5, 3);
+print "6 / 3 = " + divide(6, 3);
+
+print "======== Test Complete ========"; 

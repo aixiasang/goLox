@@ -1,0 +1,613 @@
+// =============================================================
+// GoLox解释器全面测试文件
+// 本文件包含对所有已实现功能的详细测试
+// =============================================================
+
+print "======== 基础数据类型测试 ========";
+
+// 1. 数值测试
+print "\n--- 数值测试 ---";
+print "整数: " + 42;
+print "负数: " + (-42);
+print "小数: " + 3.14159;
+print "大数: " + 1000000;
+print "小数计算: " + (10.5 + 20.7);
+
+// 2. 字符串测试
+print "\n--- 字符串测试 ---";
+print "普通字符串: \"Hello, World!\"";
+print "字符串连接: " + "Hello, " + "World!";
+print "空字符串: " + "";
+print "转义字符: 引号(\")和换行符(\\n)";
+print "混合内容: " + "数字" + 42 + "在字符串中";
+
+// 3. 布尔值测试
+print "\n--- 布尔值测试 ---";
+print "真值: " + true;
+print "假值: " + false;
+print "非运算: " + !true + ", " + !false;
+
+// 4. nil测试
+print "\n--- nil测试 ---";
+print "nil值: " + nil;
+var uninitializedVar;
+print "未初始化变量: " + uninitializedVar;
+
+// =============================================================
+print "\n======== 变量声明和赋值测试 ========";
+
+// 1. 变量声明
+print "\n--- 变量声明测试 ---";
+var a = 10;
+var b = 20;
+var sum = a + b;
+print "a = " + a + ", b = " + b + ", sum = " + sum;
+
+// 2. 变量赋值
+print "\n--- 变量赋值测试 ---";
+a = 100;
+b = 200;
+sum = a + b;
+print "重新赋值后: a = " + a + ", b = " + b + ", sum = " + sum;
+
+// 3. 连续赋值
+print "\n--- 连续赋值测试 ---";
+var x = 1;
+var y = 2;
+var z = 3;
+print "初始值: x = " + x + ", y = " + y + ", z = " + z;
+x = y = z = 42;
+print "连续赋值后: x = " + x + ", y = " + y + ", z = " + z;
+
+// =============================================================
+print "\n======== 算术运算测试 ========";
+
+// 1. 基本运算
+print "\n--- 基本运算测试 ---";
+print "加法: 5 + 3 = " + (5 + 3);
+print "减法: 5 - 3 = " + (5 - 3);
+print "乘法: 5 * 3 = " + (5 * 3);
+print "除法: 5 / 3 = " + (5 / 3);
+print "取模: 5 % 3 = " + (5 % 3);
+
+// 2. 复合运算
+print "\n--- 复合运算测试 ---";
+print "复合表达式: 2 + 3 * 4 = " + (2 + 3 * 4);
+print "带括号表达式: (2 + 3) * 4 = " + ((2 + 3) * 4);
+print "负数运算: -5 + 10 = " + (-5 + 10);
+print "连续运算: 10 - 5 - 3 = " + (10 - 5 - 3);
+
+// 3. 混合类型运算
+print "\n--- 混合类型运算测试 ---";
+print "数字+字符串: " + (5 + " apples");
+print "布尔值+数字: " + (true + 1);
+print "布尔值+字符串: " + (false + " statement");
+
+// =============================================================
+print "\n======== 逻辑运算测试 ========";
+
+// 1. 基本逻辑运算
+print "\n--- 基本逻辑运算测试 ---";
+print "AND: true and true = " + (true and true);
+print "AND: true and false = " + (true and false);
+print "AND: false and true = " + (false and true);
+print "AND: false and false = " + (false and false);
+
+print "OR: true or true = " + (true or true);
+print "OR: true or false = " + (true or false);
+print "OR: false or true = " + (false or true);
+print "OR: false or false = " + (false or false);
+
+print "NOT: !true = " + (!true);
+print "NOT: !false = " + (!false);
+
+// 2. 短路逻辑
+print "\n--- 短路逻辑测试 ---";
+var didRun = false;
+
+// 定义一个有副作用的函数
+fun setRan() {
+  didRun = true;
+  return true;
+}
+
+// 测试短路AND
+didRun = false;
+var result = false and setRan();
+print "false and setRan(): result = " + result + ", didRun = " + didRun;
+
+didRun = false;
+result = true and setRan();
+print "true and setRan(): result = " + result + ", didRun = " + didRun;
+
+// 测试短路OR
+didRun = false;
+result = true or setRan();
+print "true or setRan(): result = " + result + ", didRun = " + didRun;
+
+didRun = false;
+result = false or setRan();
+print "false or setRan(): result = " + result + ", didRun = " + didRun;
+
+// 3. 复合逻辑运算
+print "\n--- 复合逻辑运算测试 ---";
+print "(true and false) or true = " + ((true and false) or true);
+print "true and (false or true) = " + (true and (false or true));
+print "!(true and false) = " + (!(true and false));
+
+// =============================================================
+print "\n======== 比较运算测试 ========";
+
+// 1. 数值比较
+print "\n--- 数值比较测试 ---";
+print "相等: 5 == 5 = " + (5 == 5);
+print "相等: 5 == 6 = " + (5 == 6);
+print "不等: 5 != 6 = " + (5 != 6);
+print "不等: 5 != 5 = " + (5 != 5);
+print "大于: 5 > 3 = " + (5 > 3);
+print "大于: 5 > 5 = " + (5 > 5);
+print "大于等于: 5 >= 5 = " + (5 >= 5);
+print "大于等于: 5 >= 6 = " + (5 >= 6);
+print "小于: 3 < 5 = " + (3 < 5);
+print "小于: 5 < 5 = " + (5 < 5);
+print "小于等于: 5 <= 5 = " + (5 <= 5);
+print "小于等于: 6 <= 5 = " + (6 <= 5);
+
+// 2. 字符串比较
+print "\n--- 字符串比较测试 ---";
+print "字符串相等: \"hello\" == \"hello\" = " + ("hello" == "hello");
+print "字符串相等: \"hello\" == \"world\" = " + ("hello" == "world");
+print "字符串不等: \"hello\" != \"world\" = " + ("hello" != "world");
+
+// 3. 混合类型比较
+print "\n--- 混合类型比较测试 ---";
+print "不同类型: 42 == \"42\" = " + (42 == "42");
+print "nil比较: nil == nil = " + (nil == nil);
+print "布尔比较: true == true = " + (true == true);
+print "布尔与数字: true == 1 = " + (true == 1);
+
+// =============================================================
+print "\n======== 三元运算符测试 ========";
+
+print "\n--- 基本三元运算符测试 ---";
+print "true ? \"真\" : \"假\" = " + (true ? "真" : "假");
+print "false ? \"真\" : \"假\" = " + (false ? "真" : "假");
+
+print "\n--- 复合三元运算符测试 ---";
+print "5 > 3 ? \"大于\" : \"不大于\" = " + (5 > 3 ? "大于" : "不大于");
+print "5 < 3 ? 10 : 20 = " + (5 < 3 ? 10 : 20);
+
+print "\n--- 嵌套三元运算符测试 ---";
+print "true ? (false ? 1 : 2) : 3 = " + (true ? (false ? 1 : 2) : 3);
+print "(5 > 3) ? (2 > 1 ? \"a\" : \"b\") : \"c\" = " + ((5 > 3) ? (2 > 1 ? "a" : "b") : "c");
+
+// =============================================================
+print "\n======== 控制流测试 ========";
+
+// 1. if语句
+print "\n--- if语句测试 ---";
+if (true) {
+  print "if语句成功：true条件";
+}
+
+if (false) {
+  print "永远不会执行";
+} else {
+  print "if-else语句成功：false条件";
+}
+
+if (false) {
+  print "永远不会执行";
+} else if (true) {
+  print "if-else-if语句成功：第二个条件为true";
+} else {
+  print "永远不会执行";
+}
+
+if (false) {
+  print "永远不会执行";
+} else if (false) {
+  print "永远不会执行";
+} else {
+  print "if-else-if-else语句成功：所有条件为false";
+}
+
+// 嵌套if
+if (true) {
+  if (true) {
+    print "嵌套if语句成功：两个条件都为true";
+  }
+}
+
+// 2. while循环
+print "\n--- while循环测试 ---";
+var counter = 0;
+while (counter < 5) {
+  print "while循环 #" + counter;
+  counter = counter + 1;
+}
+
+// 嵌套while
+print "\n--- 嵌套while循环测试 ---";
+var i = 0;
+while (i < 3) {
+  var j = 0;
+  while (j < 2) {
+    print "嵌套while循环: i=" + i + ", j=" + j;
+    j = j + 1;
+  }
+  i = i + 1;
+}
+
+// 3. for循环
+print "\n--- for循环测试 ---";
+for (var k = 0; k < 5; k = k + 1) {
+  print "for循环 #" + k;
+}
+
+// 嵌套for
+print "\n--- 嵌套for循环测试 ---";
+for (var m = 0; m < 3; m = m + 1) {
+  for (var n = 0; n < 2; n = n + 1) {
+    print "嵌套for循环: m=" + m + ", n=" + n;
+  }
+}
+
+// 复杂for循环头
+print "\n--- 复杂for循环测试 ---";
+for (var p = 0, q = 10; p < q; p = p + 1, q = q - 1) {
+  print "复杂for循环: p=" + p + ", q=" + q;
+}
+
+// 4. break语句
+print "\n--- break语句测试 ---";
+// while循环中的break
+counter = 0;
+while (counter < 10) {
+  print "break测试: counter=" + counter;
+  counter = counter + 1;
+  if (counter >= 5) {
+    print "到达5，使用break跳出循环";
+    break;
+  }
+}
+
+// for循环中的break
+print "\n--- for循环中的break测试 ---";
+for (var r = 0; r < 10; r = r + 1) {
+  print "for break测试: r=" + r;
+  if (r >= 5) {
+    print "到达5，使用break跳出for循环";
+    break;
+  }
+}
+
+// 嵌套循环中的break
+print "\n--- 嵌套循环中的break测试 ---";
+for (var s = 0; s < 3; s = s + 1) {
+  print "外层循环: s=" + s;
+  for (var t = 0; t < 3; t = t + 1) {
+    print "  内层循环: t=" + t;
+    if (t >= 1) {
+      print "  内层循环到达1，使用break跳出内层循环";
+      break;
+    }
+  }
+}
+
+// =============================================================
+print "\n======== 函数测试 ========";
+
+// 1. 基本函数定义和调用
+print "\n--- 基本函数测试 ---";
+fun sayHello() {
+  print "Hello, World!";
+}
+
+sayHello();
+
+// 带参数的函数
+fun greet(name) {
+  print "Hello, " + name + "!";
+}
+
+greet("Alice");
+greet("Bob");
+
+// 带返回值的函数
+fun add(a, b) {
+  return a + b;
+}
+
+print "add(3, 4) = " + add(3, 4);
+
+// 多个参数的函数
+fun calculateArea(width, height) {
+  return width * height;
+}
+
+print "calculateArea(5, 10) = " + calculateArea(5, 10);
+
+// 2. 递归函数
+print "\n--- 递归函数测试 ---";
+// 阶乘函数
+fun factorial(n) {
+  if (n <= 1) return 1;
+  return n * factorial(n - 1);
+}
+
+print "factorial(5) = " + factorial(5);
+
+// 斐波那契数列
+fun fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+print "fibonacci(7) = " + fibonacci(7);
+
+// 最大公约数
+fun gcd(a, b) {
+  if (b == 0) return a;
+  return gcd(b, a % b);
+}
+
+print "gcd(48, 18) = " + gcd(48, 18);
+
+// 3. 闭包
+print "\n--- 闭包测试 ---";
+fun makeCounter() {
+  var count = 0;
+  fun counter() {
+    count = count + 1;
+    return count;
+  }
+  return counter;
+}
+
+var counter1 = makeCounter();
+var counter2 = makeCounter();
+
+print "counter1() = " + counter1(); // 1
+print "counter1() = " + counter1(); // 2
+print "counter2() = " + counter2(); // 1
+print "counter1() = " + counter1(); // 3
+
+// 带参数的闭包
+fun makeAdder(n) {
+  fun adder(x) {
+    return x + n;
+  }
+  return adder;
+}
+
+var add5 = makeAdder(5);
+var add10 = makeAdder(10);
+
+print "add5(3) = " + add5(3);  // 8
+print "add10(3) = " + add10(3);  // 13
+
+// 4. 高阶函数 
+print "\n--- 高阶函数测试 ---";
+// 函数作为参数
+fun applyTwice(fn, x) {
+  return fn(fn(x));
+}
+
+fun double(x) {
+  return x * 2;
+}
+
+fun square(x) {
+  return x * x;
+}
+
+print "applyTwice(double, 3) = " + applyTwice(double, 3);  // 12
+print "applyTwice(square, 3) = " + applyTwice(square, 3);  // 81
+
+// 返回函数的函数
+fun compose(f, g) {
+  fun composed(x) {
+    return f(g(x));
+  }
+  return composed;
+}
+
+var doubleSquare = compose(double, square);
+var squareDouble = compose(square, double);
+
+print "doubleSquare(3) = " + doubleSquare(3);  // double(square(3)) = double(9) = 18
+print "squareDouble(3) = " + squareDouble(3);  // square(double(3)) = square(6) = 36
+
+// 5. 立即调用的函数表达式(IIFE)
+print "\n--- IIFE测试 ---";
+print "IIFE结果: " + fun(x) { return x * x; }(4);  // 16
+
+// 6. 可变参数函数模拟
+print "\n--- 可变参数函数模拟测试 ---";
+fun sum(a, b, c) {
+  var result = 0;
+  if (a != nil) result = result + a;
+  if (b != nil) result = result + b;
+  if (c != nil) result = result + c;
+  return result;
+}
+
+print "sum(1) = " + sum(1, nil, nil);  // 1
+print "sum(1, 2) = " + sum(1, 2, nil);  // 3
+print "sum(1, 2, 3) = " + sum(1, 2, 3);  // 6
+
+// 7. 递归生成"数据结构"（函数模拟）
+print "\n--- 递归生成数据结构测试 ---";
+fun makeList(n) {
+  fun get(i) {
+    if (i < 0 or i >= n) return nil;
+    return i;
+  }
+  return get;
+}
+
+var list = makeList(5);
+print "list(0) = " + list(0);
+print "list(2) = " + list(2);
+print "list(5) = " + list(5); // nil
+
+// =============================================================
+print "\n======== 作用域测试 ========";
+
+var global = "全局变量";
+
+// 1. 基本作用域
+print "\n--- 基本作用域测试 ---";
+fun testScope() {
+  var local = "局部变量";
+  print "函数内部：global = " + global;
+  print "函数内部：local = " + local;
+}
+
+testScope();
+print "函数外部：global = " + global;
+// print "函数外部：local = " + local; // 错误，局部变量在外部不可见
+
+// 2. 嵌套作用域
+print "\n--- 嵌套作用域测试 ---";
+fun outer() {
+  var x = "outer x";
+  fun inner() {
+    var y = "inner y";
+    print "inner：x = " + x;
+    print "inner：y = " + y;
+  }
+  print "outer：x = " + x;
+  // print "outer：y = " + y; // 错误，内部变量在外部不可见
+  inner();
+}
+
+outer();
+
+// 3. 变量遮蔽
+print "\n--- 变量遮蔽测试 ---";
+var shadowed = "全局 shadowed";
+
+fun testShadowing() {
+  var shadowed = "局部 shadowed";
+  print "函数内部：shadowed = " + shadowed;
+}
+
+testShadowing();
+print "函数外部：shadowed = " + shadowed;
+
+// 4. 闭包变量
+print "\n--- 闭包变量测试 ---";
+fun makeClosure() {
+  var closed = "我被捕获了";
+  fun closure() {
+    print "闭包中：closed = " + closed;
+    closed = "我被修改了";
+  }
+  return closure;
+}
+
+var myClosure = makeClosure();
+myClosure();
+myClosure();
+
+// =============================================================
+print "\n======== 综合示例 ========";
+
+// 1. 简单计算器
+print "\n--- 简单计算器 ---";
+fun calculator(operation) {
+  fun add(a, b) { return a + b; }
+  fun subtract(a, b) { return a - b; }
+  fun multiply(a, b) { return a * b; }
+  fun divide(a, b) { return a / b; }
+  
+  if (operation == "+") return add;
+  if (operation == "-") return subtract;
+  if (operation == "*") return multiply;
+  if (operation == "/") return divide;
+  
+  return nil;
+}
+
+var add = calculator("+");
+var subtract = calculator("-");
+var multiply = calculator("*");
+var divide = calculator("/");
+
+print "5 + 3 = " + add(5, 3);
+print "5 - 3 = " + subtract(5, 3);
+print "5 * 3 = " + multiply(5, 3);
+print "6 / 3 = " + divide(6, 3);
+
+// 2. 迭代器模拟
+print "\n--- 迭代器模拟 ---";
+fun range(start, end, step) {
+  var current = start;
+  
+  fun hasNext() {
+    return current < end;
+  }
+  
+  fun next() {
+    var result = current;
+    current = current + step;
+    return result;
+  }
+  
+  fun iterator() {
+    var iterable = {};
+    iterable.hasNext = hasNext;
+    iterable.next = next;
+    return iterable;
+  }
+  
+  return iterator();
+}
+
+var iter = range(0, 10, 2);
+while (iter.hasNext()) {
+  print "迭代值: " + iter.next();
+}
+
+// 3. 记忆化函数
+print "\n--- 记忆化函数 ---";
+fun makeMemoFib() {
+  var cache = {}; // 假装这是一个对象
+  var cacheKeys = "";
+  
+  fun memoFib(n) {
+    // 检查缓存
+    var cacheKey = "k" + n; // 用字符串前缀k来标识键
+    
+    // 检查键是否在缓存中
+    if (cacheKeys.find(cacheKey) != -1) {
+      print "缓存命中: fib(" + n + ")";
+      return cache[cacheKey];
+    }
+    
+    // 计算斐波那契数
+    var result;
+    if (n <= 1) {
+      result = n;
+    } else {
+      result = memoFib(n - 1) + memoFib(n - 2);
+    }
+    
+    // 保存到缓存
+    cache[cacheKey] = result;
+    cacheKeys = cacheKeys + cacheKey + ",";
+    
+    return result;
+  }
+  
+  return memoFib;
+}
+
+// 由于没有真正的对象支持，这里只是演示概念
+// 在实际运行中会有错误
+// var memoFib = makeMemoFib();
+// print "memoFib(10) = " + memoFib(10);
+
+print "======== 测试完成 ========"; 

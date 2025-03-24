@@ -1,0 +1,17 @@
+// 参数传递测试 - 两个单参数函数
+
+// 第一个单参数函数
+fun printA(a) {
+  print "函数名: printA";
+  print "参数a: " + a;
+}
+
+// 第二个单参数函数
+fun printB(b) {
+  print "函数名: printB";
+  print "参数b: " + b;
+}
+
+// 调用函数验证参数传递
+printA(1);
+printB(2); 

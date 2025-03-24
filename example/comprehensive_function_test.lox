@@ -1,0 +1,74 @@
+// 全面的函数测试文件
+
+// 定义和调用简单函数
+fun sayHello() {
+  print "Hello, world!";
+}
+
+sayHello();
+
+// 带参数的函数
+fun greet(name) {
+  print "Hello, " + name + "!";
+}
+
+greet("Bob");
+
+// 带多个参数的函数
+fun add(a, b) {
+  print a + b;
+}
+
+add(5, 3);
+
+// 带返回值的函数
+fun multiply(a, b) {
+  return a * b;
+}
+
+print multiply(4, 2);
+
+// 递归函数 - 计算阶乘
+fun factorial(n) {
+  if (n <= 1) return 1;
+  return n * factorial(n - 1);
+}
+
+print "Factorial of 5 is: " + factorial(5);
+
+// 递归函数 - 斐波那契数列
+fun fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+print "Fibonacci(7) is: " + fibonacci(7);
+
+// 测试闭包和作用域
+fun makeCounter() {
+  var i = 0;
+  fun count() {
+    i = i + 1;
+    return i;
+  }
+  
+  return count;
+}
+
+var counter = makeCounter();
+print counter(); // 应该打印 1
+print counter(); // 应该打印 2
+
+// 高阶函数
+fun twice(fn, x) {
+  return fn(fn(x));
+}
+
+fun addOne(x) {
+  return x + 1;
+}
+
+print twice(addOne, 1); // 应该打印 3
+
+// 测试内置函数 clock()
+print "Current time (seconds): " + clock(); 

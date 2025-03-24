@@ -21,10 +21,15 @@ type Interpreter struct {
 
 // NewInterpreter 创建一个新的解释器
 func NewInterpreter(errorReporter error.Reporter) *Interpreter {
-	return &Interpreter{
+	interpreter := &Interpreter{
 		errorReporter: errorReporter,
 		environment:   environment.NewEnvironment(),
 	}
+
+	// 添加内置函数
+	interpreter.environment.Define("clock", &Clock{})
+
+	return interpreter
 }
 
 // Interpret 解释执行语句列表
@@ -123,12 +128,38 @@ func (i *Interpreter) VisitBreakStmt(stmt *ast.Break) interface{} {
 	panic(BreakException{})
 }
 
+// VisitFunctionStmt 处理函数声明语句
+func (i *Interpreter) VisitFunctionStmt(stmt *ast.Function) interface{} {
+	function := NewFunction(stmt, i.environment)
+	i.environment.Define(stmt.Name.Lexeme, function)
+	return nil
+}
+
+// VisitReturnStmt 处理return语句
+func (i *Interpreter) VisitReturnStmt(stmt *ast.Return) interface{} {
+	var value interface{} = nil
+	if stmt.Value != nil {
+		value = i.evaluate(stmt.Value)
+	}
+
+	// 通过抛出ReturnValue异常来实现return语句
+	panic(ReturnValue{Value: value})
+}
+
 // handlePanic 处理解释过程中的异常
 func (i *Interpreter) handlePanic() {
 	if r := recover(); r != nil {
 		if runtimeError, ok := r.(error.RuntimeError); ok {
 			// 报告运行时错误
 			i.errorReporter.Error(runtimeError.Token, 0, runtimeError.Message)
+		} else if _, ok := r.(BreakException); ok {
+			// break语句超出循环范围
+			// 这里不应该发生，因为解析器应该检查break是否在循环内
+			i.errorReporter.ReportError(0, "Break语句只能在循环内部使用。")
+		} else if _, ok := r.(ReturnValue); ok {
+			// 返回值流动到最顶层
+			// 这里可以选择将值作为REPL的结果返回
+			return
 		} else {
 			// 重新抛出其他异常
 			panic(r)
@@ -269,6 +300,32 @@ func (i *Interpreter) VisitLogicalExpr(expr *ast.Logical) interface{} {
 	return i.evaluate(expr.Right)
 }
 
+// VisitCallExpr 处理函数调用表达式
+func (i *Interpreter) VisitCallExpr(expr *ast.Call) interface{} {
+	callee := i.evaluate(expr.Callee)
+
+	// 收集参数
+	var arguments []interface{}
+	for _, argument := range expr.Arguments {
+		arguments = append(arguments, i.evaluate(argument))
+	}
+
+	// 检查callee是否可调用
+	function, ok := callee.(Callable)
+	if !ok {
+		panic(error.RuntimeError{Token: expr.Paren, Message: "只能调用函数和类。"})
+	}
+
+	// 检查参数数量是否正确
+	if len(arguments) != function.Arity() {
+		message := fmt.Sprintf("期望%d个参数，但得到%d个。", function.Arity(), len(arguments))
+		panic(error.RuntimeError{Token: expr.Paren, Message: message})
+	}
+
+	// 调用函数
+	return function.Call(i, arguments)
+}
+
 // 工具方法
 
 // isTruthy 判断一个值是否为真
@@ -346,14 +403,34 @@ func (i *Interpreter) stringify(value interface{}) string {
 		return "nil"
 	}
 
+	// 如果是浮点数
 	if num, ok := value.(float64); ok {
 		text := fmt.Sprintf("%g", num)
-		// 移除整数的小数点
+		// 如果是整数，去掉小数点和小数点后的零
 		if math.Floor(num) == num {
 			text = fmt.Sprintf("%.0f", num)
 		}
 		return text
 	}
 
+	// 如果是字符串，直接返回
+	if str, ok := value.(string); ok {
+		return str
+	}
+
+	// 如果是布尔值
+	if b, ok := value.(bool); ok {
+		if b {
+			return "true"
+		}
+		return "false"
+	}
+
+	// 如果是可调用对象，调用其String方法
+	if callable, ok := value.(Callable); ok {
+		return callable.String()
+	}
+
+	// 其他类型
 	return fmt.Sprintf("%v", value)
 }

@@ -19,6 +19,7 @@ type ExprVisitor interface {
 	VisitVariableExpr(expr *Variable) interface{}
 	VisitAssignExpr(expr *Assign) interface{}
 	VisitLogicalExpr(expr *Logical) interface{}
+	VisitCallExpr(expr *Call) interface{}
 }
 
 // Binary 二元表达式
@@ -170,5 +171,26 @@ func NewLogical(left Expr, operator *token.Token, right Expr) *Logical {
 		Left:     left,
 		Operator: operator,
 		Right:    right,
+	}
+}
+
+// Call 函数调用表达式
+type Call struct {
+	Callee    Expr         // 被调用的表达式
+	Paren     *token.Token // 右括号标记(用于错误报告)
+	Arguments []Expr       // 参数列表
+}
+
+// Accept 接受访问者
+func (c *Call) Accept(visitor ExprVisitor) interface{} {
+	return visitor.VisitCallExpr(c)
+}
+
+// NewCall 创建函数调用表达式
+func NewCall(callee Expr, paren *token.Token, arguments []Expr) *Call {
+	return &Call{
+		Callee:    callee,
+		Paren:     paren,
+		Arguments: arguments,
 	}
 }

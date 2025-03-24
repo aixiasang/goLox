@@ -1,0 +1,117 @@
+// Basic class test for Lox language
+
+// Define a simple class
+class Point {
+  init(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  distance() {
+    return this.x * this.x + this.y * this.y;
+  }
+
+  toString() {
+    return "Point(" + this.x + ", " + this.y + ")";
+  }
+}
+
+// Create and use an instance
+var p = Point(3, 4);
+print p.toString();
+print "Distance from origin: " + p.distance();
+
+// Another class example with method calling another method
+class Calculator {
+  init() {
+    this.value = 0;
+  }
+
+  add(a) {
+    this.value = this.value + a;
+    return this;
+  }
+
+  subtract(a) {
+    this.value = this.value - a;
+    return this;
+  }
+
+  multiply(a) {
+    this.value = this.value * a;
+    return this;
+  }
+
+  getValue() {
+    return this.value;
+  }
+}
+
+// Test method chaining
+var calc = Calculator();
+print "Calculation result: " + calc.add(5).multiply(2).subtract(3).getValue();
+
+// Test inheritance
+class Shape {
+  init() {
+    this.name = "Shape";
+  }
+
+  getName() {
+    return this.name;
+  }
+
+  area() {
+    return 0;
+  }
+}
+
+class Circle < Shape {
+  init(radius) {
+    this.name = "Circle";
+    this.radius = radius;
+  }
+
+  area() {
+    return 3.14 * this.radius * this.radius;
+  }
+}
+
+var circle = Circle(5);
+print circle.getName() + " area: " + circle.area();
+
+// Test super call
+class Animal {
+  init(name) {
+    this.name = name;
+  }
+  
+  speak() {
+    return "Animal sound";
+  }
+  
+  description() {
+    return "An animal named " + this.name;
+  }
+}
+
+class Dog < Animal {
+  init(name, breed) {
+    super.init(name);
+    this.breed = breed;
+  }
+  
+  speak() {
+    return "Woof!";
+  }
+  
+  description() {
+    return super.description() + " of breed " + this.breed;
+  }
+}
+
+var dog = Dog("Rex", "German Shepherd");
+print dog.speak();
+print dog.description();
+
+print "All class tests completed."; 

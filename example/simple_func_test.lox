@@ -1,0 +1,41 @@
+// Simple function test for Lox
+
+// Basic function definition
+fun add(a, b) {
+  return a + b;
+}
+
+// Function call and printing
+print add(5, 3);
+
+// Function with no return
+fun sayHello(name) {
+  print "Hello, " + name + "!";
+}
+
+sayHello("World");
+
+// Function with closure
+fun makeCounter() {
+  var count = 0;
+  fun counter() {
+    count = count + 1;
+    return count;
+  }
+  return counter;
+}
+
+var counter = makeCounter();
+print counter();
+print counter();
+print counter();
+
+// Recursive function
+fun factorial(n) {
+  if (n <= 1) return 1;
+  return n * factorial(n - 1);
+}
+
+print "Factorial of 5 is: " + factorial(5);
+
+print "All function tests completed."; 

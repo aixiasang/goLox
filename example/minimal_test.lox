@@ -1,0 +1,66 @@
+// Basic test file with ASCII characters only
+
+// Variable declaration and printing
+var greeting = "Hello, World!";
+print greeting;
+
+// Simple arithmetic
+var a = 10;
+var b = 20;
+print a + b;
+print a * b;
+print b / a;
+print b - a;
+
+// Logical operations
+print true and false;
+print true or false;
+print !true;
+print !false;
+
+// Comparison
+print a < b;
+print a <= b;
+print a > b;
+print a >= b;
+print a == a;
+print a != b;
+
+// Simple function
+fun add(x, y) {
+  return x + y;
+}
+
+print add(5, 7);
+
+// Simple if statement
+if (a < b) {
+  print "a is less than b";
+} else {
+  print "a is not less than b";
+}
+
+// Simple loop
+var counter = 0;
+while (counter < 5) {
+  print counter;
+  counter = counter + 1;
+}
+
+// Function with return and closure
+fun makeCounter() {
+  var count = 0;
+  fun counter() {
+    count = count + 1;
+    return count;
+  }
+  return counter;
+}
+
+var myCounter = makeCounter();
+print myCounter();
+print myCounter();
+print myCounter();
+
+// That's all for the basic test
+print "All tests completed."; 

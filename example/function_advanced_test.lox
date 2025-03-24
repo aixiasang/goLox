@@ -1,0 +1,79 @@
+// 高级函数测试：闭包、函数作为参数、递归和函数返回
+
+// 1. 简单函数测试
+fun sayHello() {
+  print "Hello, Lox!";
+}
+
+sayHello();
+
+// 2. 闭包测试
+fun makeCounter() {
+  var count = 0;
+  fun counter() {
+    count = count + 1;
+    return count;
+  }
+  
+  return counter;
+}
+
+var counter = makeCounter();
+print "计数器首次调用: " + counter();
+print "计数器再次调用: " + counter();
+print "计数器第三次调用: " + counter();
+
+// 3. 高阶函数 - 函数作为参数
+fun twice(f, x) {
+  return f(f(x));
+}
+
+fun addOne(n) {
+  return n + 1;
+}
+
+print "twice(addOne, 1) = " + twice(addOne, 1);
+
+// 4. 递归函数
+fun fib(n) {
+  if (n <= 1) return n;
+  return fib(n - 1) + fib(n - 2);
+}
+
+print "fib(6) = " + fib(6);
+
+// 5. 函数返回函数
+fun makeAdder(n) {
+  fun adder(x) {
+    return x + n;
+  }
+  return adder;
+}
+
+var add5 = makeAdder(5);
+var add10 = makeAdder(10);
+
+print "add5(1) = " + add5(1);
+print "add10(1) = " + add10(1);
+
+// 6. 函数作为计算结果
+fun getOperator(op) {
+  if (op == "+") {
+    fun add(a, b) { return a + b; }
+    return add;
+  } else if (op == "*") {
+    fun multiply(a, b) { return a * b; }
+    return multiply;
+  } else {
+    fun unknown(a, b) { return "未知操作"; }
+    return unknown;
+  }
+}
+
+var plus = getOperator("+");
+var mult = getOperator("*");
+var unknown = getOperator("?");
+
+print "5 + 3 = " + plus(5, 3);
+print "5 * 3 = " + mult(5, 3);
+print "5 ? 3 = " + unknown(5, 3);

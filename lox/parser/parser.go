@@ -1,6 +1,8 @@
 package parser
 
 import (
+	"fmt"
+
 	"github.com/aixiasang/goLox/lox/ast"
 	"github.com/aixiasang/goLox/lox/error"
 	"github.com/aixiasang/goLox/lox/token"
@@ -11,6 +13,7 @@ type Parser struct {
 	tokens        []*token.Token // 标记列表
 	current       int            // 当前标记索引
 	errorReporter error.Reporter // 错误报告器
+	debug         bool           // 调试模式标志
 }
 
 // NewParser 创建一个新的解析器
@@ -19,6 +22,26 @@ func NewParser(tokens []*token.Token, errorReporter error.Reporter) *Parser {
 		tokens:        tokens,
 		current:       0,
 		errorReporter: errorReporter,
+		debug:         false, // 默认不启用调试模式
+	}
+}
+
+// SetDebug 设置调试模式
+func (p *Parser) SetDebug(debug bool) {
+	p.debug = debug
+}
+
+// 调试输出辅助函数
+func (p *Parser) debugPrintf(format string, args ...interface{}) {
+	if p.debug {
+		fmt.Printf(format, args...)
+	}
+}
+
+// debugPrintln 调试输出一行信息
+func (p *Parser) debugPrintln(args ...interface{}) {
+	if p.debug {
+		fmt.Println(args...)
 	}
 }
 
@@ -59,11 +82,44 @@ func (p *Parser) declaration() ast.Stmt {
 		}
 	}()
 
+	if p.match(token.FUN) {
+		return p.function("函数")
+	}
+
 	if p.match(token.VAR) {
 		return p.varDeclaration()
 	}
 
 	return p.statement()
+}
+
+// function 解析函数声明
+func (p *Parser) function(kind string) ast.Stmt {
+	name := p.consume(token.IDENTIFIER, "期望"+kind+"名称。")
+
+	p.consume(token.LEFT_PAREN, "期望"+kind+"名称后有'('。")
+
+	var parameters []*token.Token
+	if !p.check(token.RIGHT_PAREN) {
+		for {
+			if len(parameters) >= 255 {
+				p.error(p.peek(), "参数不能超过255个。")
+			}
+
+			parameters = append(parameters, p.consume(token.IDENTIFIER, "期望参数名称。"))
+
+			if !p.match(token.COMMA) {
+				break
+			}
+		}
+	}
+
+	p.consume(token.RIGHT_PAREN, "期望参数列表后有')'。")
+
+	p.consume(token.LEFT_BRACE, "期望"+kind+"体开始有'{'。")
+	body := p.block()
+
+	return ast.NewFunction(name, parameters, body)
 }
 
 // varDeclaration 解析变量声明
@@ -103,6 +159,10 @@ func (p *Parser) statement() ast.Stmt {
 
 	if p.match(token.BREAK) {
 		return p.breakStatement()
+	}
+
+	if p.match(token.RETURN) {
+		return p.returnStatement()
 	}
 
 	return p.expressionStatement()
@@ -220,6 +280,12 @@ func (p *Parser) expressionStatement() ast.Stmt {
 // expression 解析表达式
 func (p *Parser) expression() ast.Expr {
 	return p.assignment()
+}
+
+// funcCallArgExpression 专门用于函数调用参数，跳过逗号表达式处理
+func (p *Parser) funcCallArgExpression() ast.Expr {
+	// 从一元表达式开始，跳过所有可能处理逗号的高级解析步骤
+	return p.equality()
 }
 
 // assignment 解析赋值表达式
@@ -401,7 +467,60 @@ func (p *Parser) unary() ast.Expr {
 		return ast.NewUnary(operator, right)
 	}
 
-	return p.primary()
+	return p.call()
+}
+
+// call 解析函数调用
+func (p *Parser) call() ast.Expr {
+	expr := p.primary()
+
+	for {
+		if p.match(token.LEFT_PAREN) {
+			expr = p.finishCall(expr)
+		} else {
+			break
+		}
+	}
+
+	return expr
+}
+
+// finishCall 完成函数调用的解析
+func (p *Parser) finishCall(callee ast.Expr) ast.Expr {
+	// 创建一个空的参数列表
+	var arguments []ast.Expr
+
+	p.debugPrintln("解析函数调用参数：开始")
+
+	// 如果不是右括号，则解析参数列表
+	if !p.check(token.RIGHT_PAREN) {
+		for {
+			// 解析参数 - 使用funcCallArgExpression而不是expression
+			arg := p.funcCallArgExpression()
+			arguments = append(arguments, arg)
+			p.debugPrintf("添加参数: %T\n", arg)
+
+			// 如果下一个标记不是逗号，跳出循环
+			if !p.match(token.COMMA) {
+				p.debugPrintln("未匹配到逗号，结束参数解析")
+				break
+			}
+
+			p.debugPrintln("匹配到逗号，继续解析下一个参数")
+
+			// 检查参数数量限制
+			if len(arguments) >= 255 {
+				p.error(p.peek(), "参数不能超过255个。")
+			}
+		}
+	}
+
+	// 消费右括号，结束参数列表
+	paren := p.consume(token.RIGHT_PAREN, "期望函数调用参数列表后有')'。")
+	p.debugPrintf("参数解析完成，共 %d 个参数\n", len(arguments))
+
+	// 创建并返回调用表达式
+	return ast.NewCall(callee, paren, arguments)
 }
 
 // primary 解析基本表达式
@@ -441,10 +560,12 @@ func (p *Parser) primary() ast.Expr {
 func (p *Parser) match(types ...token.TokenType) bool {
 	for _, t := range types {
 		if p.check(t) {
+			p.debugPrintf("匹配标记: %s\n", token.GetTokenName(t))
 			p.advance()
 			return true
 		}
 	}
+	p.debugPrintf("未匹配任何标记: %v\n", types)
 	return false
 }
 
@@ -478,6 +599,7 @@ func (p *Parser) isAtEnd() bool {
 
 // peek 返回当前标记但不消费
 func (p *Parser) peek() *token.Token {
+	p.debugPrintf("当前标记: %s\n", p.tokens[p.current].String())
 	return p.tokens[p.current]
 }
 
@@ -525,4 +647,17 @@ func (p *Parser) breakStatement() ast.Stmt {
 	keyword := p.previous()
 	p.consume(token.SEMICOLON, "break语句后需要';'。")
 	return ast.NewBreak(keyword)
+}
+
+// returnStatement 解析return语句
+func (p *Parser) returnStatement() ast.Stmt {
+	keyword := p.previous()
+	var value ast.Expr = nil
+
+	if !p.check(token.SEMICOLON) {
+		value = p.expression()
+	}
+
+	p.consume(token.SEMICOLON, "期望return语句后有';'。")
+	return ast.NewReturn(keyword, value)
 }

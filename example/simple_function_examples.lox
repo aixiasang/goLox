@@ -1,0 +1,61 @@
+// 简单函数示例测试文件
+
+// 基本函数：无参数无返回值
+fun sayHello() {
+  print "Hello from function!";
+}
+
+// 基本函数调用
+print "调用无参数函数:";
+sayHello();
+
+// 带参数的函数
+fun greet(name) {
+  print "Hello, " + name + "!";
+}
+
+// 调用带参数的函数
+print "调用单参数函数:";
+greet("World");
+
+// 带多个参数的函数
+fun add(a, b) {
+  print a + " + " + b + " = " + (a + b);
+  return a + b;
+}
+
+// 调用带多个参数的函数
+print "调用双参数函数:";
+add(5, 3);
+
+// 使用返回值
+print "使用函数返回值:";
+var sum = add(10, 20);
+print "返回的结果是: " + sum;
+
+// 递归函数
+fun factorial(n) {
+  if (n <= 1) return 1;
+  return n * factorial(n - 1);
+}
+
+// 调用递归函数
+print "调用递归函数:";
+print "5的阶乘是: " + factorial(5);
+
+// 函数作为值传递
+fun applyTwice(func, value) {
+  return func(func(value));
+}
+
+fun addThree(n) {
+  return n + 3;
+}
+
+// 将函数作为参数传递
+print "函数作为参数传递:";
+print "对5应用两次addThree: " + applyTwice(addThree, 5);
+
+// 测试内置函数
+print "测试内置函数:";
+print "当前时间(秒): " + clock(); 

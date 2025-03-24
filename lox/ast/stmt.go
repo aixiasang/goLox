@@ -18,6 +18,8 @@ type StmtVisitor interface {
 	VisitIfStmt(stmt *If) interface{}
 	VisitWhileStmt(stmt *While) interface{}
 	VisitBreakStmt(stmt *Break) interface{}
+	VisitFunctionStmt(stmt *Function) interface{}
+	VisitReturnStmt(stmt *Return) interface{}
 }
 
 // Expression 表达式语句
@@ -144,5 +146,45 @@ func (b *Break) Accept(visitor StmtVisitor) interface{} {
 func NewBreak(keyword *token.Token) *Break {
 	return &Break{
 		Keyword: keyword,
+	}
+}
+
+// Function 函数声明语句
+type Function struct {
+	Name   *token.Token   // 函数名
+	Params []*token.Token // 参数列表
+	Body   []Stmt         // 函数体
+}
+
+// Accept 接受访问者
+func (f *Function) Accept(visitor StmtVisitor) interface{} {
+	return visitor.VisitFunctionStmt(f)
+}
+
+// NewFunction 创建函数声明语句
+func NewFunction(name *token.Token, params []*token.Token, body []Stmt) *Function {
+	return &Function{
+		Name:   name,
+		Params: params,
+		Body:   body,
+	}
+}
+
+// Return 返回语句
+type Return struct {
+	Keyword *token.Token // 关键字token
+	Value   Expr         // 返回值(可能为nil)
+}
+
+// Accept 接受访问者
+func (r *Return) Accept(visitor StmtVisitor) interface{} {
+	return visitor.VisitReturnStmt(r)
+}
+
+// NewReturn 创建返回语句
+func NewReturn(keyword *token.Token, value Expr) *Return {
+	return &Return{
+		Keyword: keyword,
+		Value:   value,
 	}
 }

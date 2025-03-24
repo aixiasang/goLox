@@ -1,0 +1,63 @@
+// 函数测试文件 - 全面测试函数功能
+
+// 1. 无参数函数
+fun sayHello() {
+  print "Hello, world!";
+}
+
+// 2. 单参数函数
+fun greet(name) {
+  print "Hello, " + name + "!";
+}
+
+// 3. 多参数函数 + 返回值
+fun add(a, b) {
+  return a + b;
+}
+
+// 4. 返回值的使用
+fun multiply(a, b) {
+  return a * b;
+}
+
+// 5. 函数嵌套调用
+fun addMultiply(a, b, c) {
+  var sum = add(a, b);
+  return multiply(sum, c);
+}
+
+// 6. 递归函数
+fun factorial(n) {
+  if (n <= 1) return 1;
+  return n * factorial(n - 1);
+}
+
+// 7. 内置函数测试
+fun testClock() {
+  print "Current time: " + clock();
+}
+
+// 8. 高阶函数 - 函数作为参数
+fun apply(func, a, b) {
+  return func(a, b);
+}
+
+// 执行测试
+print "--- 基础函数测试 ---";
+sayHello();
+greet("Lox");
+
+print "--- 返回值测试 ---";
+print "2 + 3 = " + add(2, 3);
+print "4 * 5 = " + multiply(4, 5);
+print "(2 + 3) * 4 = " + addMultiply(2, 3, 4);
+
+print "--- 递归测试 ---";
+print "5! = " + factorial(5);
+
+print "--- 内置函数测试 ---";
+testClock();
+
+print "--- 高阶函数测试 ---";
+print "apply(add, 2, 3) = " + apply(add, 2, 3);
+print "apply(multiply, 2, 3) = " + apply(multiply, 2, 3);
