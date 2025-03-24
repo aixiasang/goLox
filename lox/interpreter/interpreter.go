@@ -17,17 +17,23 @@ type BreakException struct{}
 type Interpreter struct {
 	errorReporter error.Reporter
 	environment   *environment.Environment
+	locals        map[ast.Expr]int         // 变量的作用域深度信息
+	globals       *environment.Environment // 全局环境
 }
 
 // NewInterpreter 创建一个新的解释器
 func NewInterpreter(errorReporter error.Reporter) *Interpreter {
-	interpreter := &Interpreter{
-		errorReporter: errorReporter,
-		environment:   environment.NewEnvironment(),
-	}
+	globals := environment.NewEnvironment()
 
 	// 添加内置函数
-	interpreter.environment.Define("clock", &Clock{})
+	globals.Define("clock", &Clock{})
+
+	interpreter := &Interpreter{
+		errorReporter: errorReporter,
+		environment:   globals,
+		globals:       globals,
+		locals:        make(map[ast.Expr]int),
+	}
 
 	return interpreter
 }
@@ -175,7 +181,13 @@ func (i *Interpreter) evaluate(expr ast.Expr) interface{} {
 // VisitAssignExpr 处理赋值表达式
 func (i *Interpreter) VisitAssignExpr(expr *ast.Assign) interface{} {
 	value := i.evaluate(expr.Value)
-	i.environment.Assign(expr.Name, value)
+
+	if distance, ok := i.locals[expr]; ok {
+		i.environment.AssignAt(distance, expr.Name, value)
+	} else {
+		i.globals.Assign(expr.Name, value)
+	}
+
 	return value
 }
 
@@ -278,7 +290,7 @@ func (i *Interpreter) VisitTernaryExpr(expr *ast.Ternary) interface{} {
 
 // VisitVariableExpr 处理变量表达式
 func (i *Interpreter) VisitVariableExpr(expr *ast.Variable) interface{} {
-	return i.environment.Get(expr.Name)
+	return i.lookUpVariable(expr.Name, expr)
 }
 
 // VisitLogicalExpr 处理逻辑表达式
@@ -433,4 +445,18 @@ func (i *Interpreter) stringify(value interface{}) string {
 
 	// 其他类型
 	return fmt.Sprintf("%v", value)
+}
+
+// Resolve 记录变量引用的作用域深度
+func (i *Interpreter) Resolve(expr ast.Expr, depth int) {
+	i.locals[expr] = depth
+}
+
+// lookUpVariable 根据作用域深度查找变量
+func (i *Interpreter) lookUpVariable(name *token.Token, expr ast.Expr) interface{} {
+	if distance, ok := i.locals[expr]; ok {
+		return i.environment.GetAt(distance, name.Lexeme)
+	} else {
+		return i.globals.Get(name)
+	}
 }

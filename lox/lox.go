@@ -8,6 +8,7 @@ import (
 	errorp "github.com/aixiasang/goLox/lox/error"
 	"github.com/aixiasang/goLox/lox/interpreter"
 	"github.com/aixiasang/goLox/lox/parser"
+	"github.com/aixiasang/goLox/lox/resolver"
 	"github.com/aixiasang/goLox/lox/scanner"
 )
 
@@ -53,6 +54,15 @@ func (l *Lox) Run(source string) {
 	statements := p.Parse()
 
 	// 如果有语法错误,停止解释
+	if l.errorReporter.HasError() {
+		return
+	}
+
+	// 变量解析
+	r := resolver.NewResolver(l.interpreter, l.errorReporter)
+	r.Resolve(statements)
+
+	// 如果解析过程中有错误,停止解释
 	if l.errorReporter.HasError() {
 		return
 	}

@@ -70,3 +70,31 @@ func (e *Environment) Assign(name *token.Token, value interface{}) {
 		Message: fmt.Sprintf("未定义的变量 '%s'。", name.Lexeme),
 	})
 }
+
+// Ancestor 获取指定深度的环境
+func (e *Environment) Ancestor(distance int) *Environment {
+	environment := e
+	for i := 0; i < distance; i++ {
+		environment = environment.enclosing
+	}
+	return environment
+}
+
+// GetAt 从指定深度的环境中获取变量值
+func (e *Environment) GetAt(distance int, name string) interface{} {
+	// 获取在指定深度的环境，然后从中获取变量
+	environment := e.Ancestor(distance)
+	if value, ok := environment.values[name]; ok {
+		return value
+	}
+
+	// 按照正常逻辑这不应该发生，因为解析器已经确定了变量存在
+	return nil
+}
+
+// AssignAt 在指定深度的环境中赋值
+func (e *Environment) AssignAt(distance int, name *token.Token, value interface{}) {
+	// 获取在指定深度的环境，然后进行赋值
+	environment := e.Ancestor(distance)
+	environment.values[name.Lexeme] = value
+}
