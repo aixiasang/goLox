@@ -21,6 +21,7 @@ type Scanner struct {
 // 关键字映射表
 var keywords = map[string]token.TokenType{
 	"and":    token.AND,
+	"break":  token.BREAK,
 	"class":  token.CLASS,
 	"else":   token.ELSE,
 	"false":  token.FALSE,
@@ -87,6 +88,8 @@ func (s *Scanner) scanToken() {
 		s.addToken(token.SEMICOLON)
 	case '*':
 		s.addToken(token.STAR)
+	case '%':
+		s.addToken(token.MODULO) // 取模运算符
 	case '?':
 		s.addToken(token.QUESTION) // 三元运算符问号
 	case ':':

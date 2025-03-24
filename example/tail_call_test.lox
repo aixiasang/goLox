@@ -1,0 +1,36 @@
+// 尾调用优化测试
+
+// 使用递归计算阶乘
+// 这个函数会在解释器中进行尾递归优化
+function factorial(n) {
+  return factorialTail(n, 1);
+}
+
+// 尾递归版本的阶乘
+function factorialTail(n, acc) {
+  if (n <= 1) return acc;
+  
+  // 这是一个尾调用，可以被优化
+  return factorialTail(n - 1, n * acc);
+}
+
+// 测试阶乘计算
+var result = factorial(10);
+print "10的阶乘是: " + result;
+
+// 斐波那契数列的尾递归实现
+function fibonacci(n) {
+  return fibTail(n, 0, 1);
+}
+
+function fibTail(n, a, b) {
+  if (n == 0) return a;
+  
+  // 这是一个尾调用，可以被优化
+  return fibTail(n - 1, b, a + b);
+}
+
+// 测试斐波那契数列
+for (var i = 0; i < 10; i = i + 1) {
+  print "斐波那契(" + i + ") = " + fibonacci(i);
+} 

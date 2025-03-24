@@ -101,6 +101,10 @@ func (p *Parser) statement() ast.Stmt {
 		return p.forStatement()
 	}
 
+	if p.match(token.BREAK) {
+		return p.breakStatement()
+	}
+
 	return p.expressionStatement()
 }
 
@@ -143,14 +147,13 @@ func (p *Parser) whileStatement() ast.Stmt {
 	return ast.NewWhile(condition, body)
 }
 
-// forStatement 解析for语句（语法糖，转换为while语句）
+// forStatement 解析for语句
 func (p *Parser) forStatement() ast.Stmt {
-	p.consume(token.LEFT_PAREN, "期望在 'for' 后有 '('")
+	p.consume(token.LEFT_PAREN, "for语句后需要'('。")
 
 	// 初始化部分
 	var initializer ast.Stmt
 	if p.match(token.SEMICOLON) {
-		// 没有初始化部分
 		initializer = nil
 	} else if p.match(token.VAR) {
 		initializer = p.varDeclaration()
@@ -163,19 +166,20 @@ func (p *Parser) forStatement() ast.Stmt {
 	if !p.check(token.SEMICOLON) {
 		condition = p.expression()
 	}
-	p.consume(token.SEMICOLON, "期望在循环条件后有 ';'")
+	p.consume(token.SEMICOLON, "循环条件后需要';'。")
 
-	// 增量部分
+	// 更新部分
 	var increment ast.Expr
 	if !p.check(token.RIGHT_PAREN) {
 		increment = p.expression()
 	}
-	p.consume(token.RIGHT_PAREN, "期望在 for 子句后有 ')'")
+	p.consume(token.RIGHT_PAREN, "for循环的闭合需要')'。")
 
 	// 循环体
 	body := p.statement()
 
-	// 如果有增量，将其添加到循环体末尾
+	// 重构为while循环
+	// 如果有更新表达式，将其附加到循环体后面
 	if increment != nil {
 		body = ast.NewBlock([]ast.Stmt{
 			body,
@@ -183,20 +187,17 @@ func (p *Parser) forStatement() ast.Stmt {
 		})
 	}
 
-	// 如果没有条件，则使用 true
+	// 如果没有条件，默认为true
 	if condition == nil {
 		condition = ast.NewLiteral(true)
 	}
 
-	// 创建 while 循环
+	// 创建while语句
 	body = ast.NewWhile(condition, body)
 
-	// 如果有初始化部分，将其放在循环前
+	// 如果有初始化语句，将其放在前面
 	if initializer != nil {
-		body = ast.NewBlock([]ast.Stmt{
-			initializer,
-			body,
-		})
+		body = ast.NewBlock([]ast.Stmt{initializer, body})
 	}
 
 	return body
@@ -300,9 +301,7 @@ func (p *Parser) conditional() ast.Expr {
 
 	if p.match(token.QUESTION) {
 		thenBranch := p.expression()
-		if !p.match(token.COLON) {
-			p.error(p.peek(), "期望在条件表达式中的 '?' 后有 ':'")
-		}
+		p.consume(token.COLON, "期望在条件表达式中的 '?' 后有 ':'")
 		elseBranch := p.conditional()
 		expr = ast.NewTernary(expr, thenBranch, elseBranch)
 	}
@@ -312,7 +311,8 @@ func (p *Parser) conditional() ast.Expr {
 
 // equality 解析相等性表达式
 func (p *Parser) equality() ast.Expr {
-	if p.match(token.BANG_EQUAL, token.EQUAL_EQUAL) && p.check(token.NUMBER, token.STRING, token.TRUE, token.FALSE, token.NIL, token.IDENTIFIER, token.LEFT_PAREN) {
+	// 处理缺少左操作数的情况
+	if p.match(token.BANG_EQUAL, token.EQUAL_EQUAL) {
 		operator := p.previous()
 		p.error(operator, "二元运算符缺少左操作数")
 		right := p.comparison()
@@ -332,7 +332,8 @@ func (p *Parser) equality() ast.Expr {
 
 // comparison 解析比较表达式
 func (p *Parser) comparison() ast.Expr {
-	if p.match(token.GREATER, token.GREATER_EQUAL, token.LESS, token.LESS_EQUAL) && p.check(token.NUMBER, token.STRING, token.TRUE, token.FALSE, token.NIL, token.IDENTIFIER, token.LEFT_PAREN) {
+	// 处理缺少左操作数的情况
+	if p.match(token.GREATER, token.GREATER_EQUAL, token.LESS, token.LESS_EQUAL) {
 		operator := p.previous()
 		p.error(operator, "二元运算符缺少左操作数")
 		right := p.term()
@@ -352,7 +353,8 @@ func (p *Parser) comparison() ast.Expr {
 
 // term 解析项表达式
 func (p *Parser) term() ast.Expr {
-	if p.match(token.PLUS) && p.check(token.NUMBER, token.STRING, token.TRUE, token.FALSE, token.NIL, token.IDENTIFIER, token.LEFT_PAREN) {
+	// 处理缺少左操作数的情况
+	if p.match(token.PLUS) {
 		operator := p.previous()
 		p.error(operator, "二元运算符缺少左操作数")
 		right := p.factor()
@@ -372,7 +374,8 @@ func (p *Parser) term() ast.Expr {
 
 // factor 解析因子表达式
 func (p *Parser) factor() ast.Expr {
-	if p.match(token.SLASH, token.STAR) && p.check(token.NUMBER, token.STRING, token.TRUE, token.FALSE, token.NIL, token.IDENTIFIER, token.LEFT_PAREN) {
+	// 处理缺少左操作数的情况
+	if p.match(token.SLASH, token.STAR, token.MODULO) {
 		operator := p.previous()
 		p.error(operator, "二元运算符缺少左操作数")
 		right := p.unary()
@@ -381,7 +384,7 @@ func (p *Parser) factor() ast.Expr {
 
 	expr := p.unary()
 
-	for p.match(token.SLASH, token.STAR) {
+	for p.match(token.SLASH, token.STAR, token.MODULO) {
 		operator := p.previous()
 		right := p.unary()
 		expr = ast.NewBinary(expr, operator, right)
@@ -515,4 +518,11 @@ func (p *Parser) synchronize() {
 
 		p.advance()
 	}
+}
+
+// breakStatement 解析break语句
+func (p *Parser) breakStatement() ast.Stmt {
+	keyword := p.previous()
+	p.consume(token.SEMICOLON, "break语句后需要';'。")
+	return ast.NewBreak(keyword)
 }

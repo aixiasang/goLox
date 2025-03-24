@@ -20,6 +20,7 @@ const (
 	STAR
 	QUESTION // 问号(用于三元操作符)
 	COLON    // 冒号(用于三元操作符)
+	MODULO   // 取模运算符
 
 	// 一个或两个字符的标记
 	BANG
@@ -38,6 +39,7 @@ const (
 
 	// 关键字
 	AND
+	BREAK
 	CLASS
 	ELSE
 	FALSE
@@ -72,6 +74,7 @@ var TokenNames = map[TokenType]string{
 	STAR:          "STAR",
 	QUESTION:      "QUESTION",
 	COLON:         "COLON",
+	MODULO:        "MODULO",
 	BANG:          "BANG",
 	BANG_EQUAL:    "BANG_EQUAL",
 	EQUAL:         "EQUAL",
@@ -84,6 +87,7 @@ var TokenNames = map[TokenType]string{
 	STRING:        "STRING",
 	NUMBER:        "NUMBER",
 	AND:           "AND",
+	BREAK:         "BREAK",
 	CLASS:         "CLASS",
 	ELSE:          "ELSE",
 	FALSE:         "FALSE",

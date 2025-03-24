@@ -1,0 +1,33 @@
+// 打印金字塔
+var height = 12; // 金字塔高度
+
+for (var i = 1; i <= height; i = i + 1) {
+  // 打印空格
+  var spaces = "";
+  for (var j = 1; j <= height - i; j = j + 1) {
+    spaces = spaces + " ";
+  }
+  
+  // 打印星号
+  var stars = "";
+  for (var k = 1; k <= 2 * i - 1; k = k + 1) {
+    stars = stars + "*";
+  }
+  
+  print spaces + stars;
+}
+
+// 打印菱形
+var size = 10; // 菱形大小
+
+for (var i = 1; i <= size; i = i + 1) {
+    var spaces = "";    
+    for (var j = 1; j <= size - i; j = j + 1) {
+        spaces = spaces + " ";
+    }
+    var stars = "";
+    for (var k = 1; k <= 2 * i - 1; k = k + 1) {
+        stars = stars + "*";
+    }
+    print spaces + stars;
+}

@@ -17,6 +17,7 @@ type StmtVisitor interface {
 	VisitBlockStmt(stmt *Block) interface{}
 	VisitIfStmt(stmt *If) interface{}
 	VisitWhileStmt(stmt *While) interface{}
+	VisitBreakStmt(stmt *Break) interface{}
 }
 
 // Expression 表达式语句
@@ -126,5 +127,22 @@ func NewWhile(condition Expr, body Stmt) *While {
 	return &While{
 		Condition: condition,
 		Body:      body,
+	}
+}
+
+// Break 跳出循环语句
+type Break struct {
+	Keyword *token.Token
+}
+
+// Accept 接受访问者
+func (b *Break) Accept(visitor StmtVisitor) interface{} {
+	return visitor.VisitBreakStmt(b)
+}
+
+// NewBreak 创建跳出循环语句
+func NewBreak(keyword *token.Token) *Break {
+	return &Break{
+		Keyword: keyword,
 	}
 }

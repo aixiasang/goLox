@@ -10,6 +10,9 @@ import (
 	"github.com/aixiasang/goLox/lox/token"
 )
 
+// BreakException 表示遇到break语句的异常
+type BreakException struct{}
+
 // Interpreter 实现表达式求值和语句执行
 type Interpreter struct {
 	errorReporter error.Reporter
@@ -97,10 +100,27 @@ func (i *Interpreter) VisitVarStmt(stmt *ast.Var) interface{} {
 
 // VisitWhileStmt 处理循环语句
 func (i *Interpreter) VisitWhileStmt(stmt *ast.While) interface{} {
+	defer func() {
+		// 捕获break异常，但不做处理，仅用于跳出循环
+		if r := recover(); r != nil {
+			// 如果是BreakException，就直接吞掉
+			if _, ok := r.(BreakException); !ok {
+				// 其他类型的异常继续向上抛
+				panic(r)
+			}
+		}
+	}()
+
 	for i.isTruthy(i.evaluate(stmt.Condition)) {
 		i.execute(stmt.Body)
 	}
 	return nil
+}
+
+// VisitBreakStmt 处理break语句
+func (i *Interpreter) VisitBreakStmt(stmt *ast.Break) interface{} {
+	// 通过抛出异常来跳出循环
+	panic(BreakException{})
 }
 
 // handlePanic 处理解释过程中的异常
@@ -173,12 +193,20 @@ func (i *Interpreter) VisitBinaryExpr(expr *ast.Binary) interface{} {
 	case token.STAR:
 		i.checkNumberOperands(expr.Operator, left, right)
 		return i.asNumber(left) * i.asNumber(right)
+	case token.MODULO:
+		i.checkNumberOperands(expr.Operator, left, right)
+		rightNum := i.asNumber(right)
+		if rightNum == 0 {
+			panic(error.RuntimeError{Token: expr.Operator, Message: "取模运算符的右操作数不能为零。"})
+		}
+		return float64(int(i.asNumber(left)) % int(i.asNumber(right)))
 	case token.PLUS:
 		if i.isNumber(left) && i.isNumber(right) {
 			return i.asNumber(left) + i.asNumber(right)
 		}
-		if i.isString(left) && i.isString(right) {
-			return i.asString(left) + i.asString(right)
+		// 如果任一操作数是字符串，则将另一个操作数也转换为字符串
+		if i.isString(left) || i.isString(right) {
+			return i.stringify(left) + i.stringify(right)
 		}
 		panic(error.RuntimeError{Token: expr.Operator, Message: "'+'运算符只能用于数字或字符串。"})
 	case token.GREATER:

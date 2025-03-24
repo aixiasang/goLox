@@ -1,0 +1,221 @@
+// 挑战1：不使用嵌套分支语句的控制流实现
+// 这是一个简单的状态机实现
+
+// 定义状态常量
+var STATE_START = 0;
+var STATE_RUNNING = 1;
+var STATE_PAUSED = 2;
+var STATE_END = 3;
+
+// 初始化状态
+var currentState = STATE_START;
+var continueExecution = true;
+var result = 0;
+
+// 使用while循环和状态机模式代替嵌套的if-else
+print "开始状态机执行:";
+while (continueExecution) {
+  
+  // START状态
+  if (currentState == STATE_START) {
+    print "初始化中...";
+    result = 0;
+    currentState = STATE_RUNNING;
+  }
+  
+  // RUNNING状态
+  else if (currentState == STATE_RUNNING) {
+    print "正在运行计算...";
+    
+    // 执行一些计算
+    for (var i = 1; i <= 5; i = i + 1) {
+      result = result + i;
+      print "  添加 " + i + "，当前结果: " + result;
+    }
+    
+    // 基于结果决定下一状态
+    if (result > 10) {
+      currentState = STATE_PAUSED;
+    } else {
+      currentState = STATE_END;
+    }
+  }
+  
+  // PAUSED状态
+  else if (currentState == STATE_PAUSED) {
+    print "暂停中...检查结果";
+    
+    // 基于条件选择下一状态
+    if (result >= 15) {
+      print "结果已足够大，进入结束状态";
+      currentState = STATE_END;
+    } else {
+      print "结果不够大，返回运行状态";
+      currentState = STATE_RUNNING;
+    }
+  }
+  
+  // END状态
+  else if (currentState == STATE_END) {
+    print "程序结束，最终结果: " + result;
+    continueExecution = false;
+  }
+  
+  // 未知状态处理
+  else {
+    print "错误：未知状态!";
+    continueExecution = false;
+  }
+}
+
+// 另一个示例：菜单驱动的程序
+print "\n菜单驱动程序示例:";
+
+var MENU_MAIN = 0;
+var MENU_ADD = 1;
+var MENU_SUBTRACT = 2;
+var MENU_MULTIPLY = 3;
+var MENU_EXIT = 4;
+
+var currentMenu = MENU_MAIN;
+var menuActive = true;
+var value = 10;
+var counter = 0;  // 添加计数器避免无限循环
+var maxIterations = 3;  // 设置最大迭代次数
+
+while (menuActive and counter < maxIterations) {
+  counter = counter + 1;
+  
+  // 主菜单
+  if (currentMenu == MENU_MAIN) {
+    print "当前值: " + value;
+    print "选择操作:";
+    print "1. 加法";
+    print "2. 减法";
+    print "3. 乘法";
+    print "4. 退出";
+    
+    // 在实际程序中，这里会从用户获取输入
+    // 为演示目的，我们将模拟选择
+    var choice = counter;  // 每次迭代选择不同的操作
+    
+    if (choice == 1) currentMenu = MENU_ADD;
+    else if (choice == 2) currentMenu = MENU_SUBTRACT;
+    else if (choice == 3) currentMenu = MENU_MULTIPLY;
+    else if (choice == 4 or choice > 4) currentMenu = MENU_EXIT;
+  }
+  
+  // 加法菜单
+  else if (currentMenu == MENU_ADD) {
+    print "执行加法:";
+    value = value + 5;
+    print "新值: " + value;
+    currentMenu = MENU_MAIN;
+  }
+  
+  // 减法菜单
+  else if (currentMenu == MENU_SUBTRACT) {
+    print "执行减法:";
+    value = value - 3;
+    print "新值: " + value;
+    currentMenu = MENU_MAIN;
+  }
+  
+  // 乘法菜单
+  else if (currentMenu == MENU_MULTIPLY) {
+    print "执行乘法:";
+    value = value * 2;
+    print "新值: " + value;
+    currentMenu = MENU_MAIN;
+  }
+  
+  // 退出菜单
+  else if (currentMenu == MENU_EXIT) {
+    print "退出程序，最终值: " + value;
+    menuActive = false;
+  }
+}
+
+// 状态机实现的有限自动机示例
+print "\n有限自动机示例:";
+
+var FA_START = 0;
+var FA_SAW_A = 1;
+var FA_SAW_AB = 2;
+var FA_ACCEPT = 3;
+var FA_REJECT = 4;
+
+// 这是一个识别"abb"模式的简单自动机
+var inputs = "aababbabb";
+var inputLength = 9; // 手动指定长度，因为Lox不支持字符串length属性
+var currentFA = FA_START;
+var index = 0;
+
+// 假设我们有一个函数可以获取字符串中的字符
+// 由于Lox不支持字符索引，我们使用预定义的字符序列
+var a1 = "a";
+var a2 = "a";
+var a3 = "b";
+var a4 = "a";
+var a5 = "b";
+var a6 = "b";
+var a7 = "a";
+var a8 = "b";
+var a9 = "b";
+
+while (index < inputLength) {
+  var char = "";
+  // 手动模拟字符串索引
+  if (index == 0) char = a1;
+  if (index == 1) char = a2;
+  if (index == 2) char = a3;
+  if (index == 3) char = a4;
+  if (index == 4) char = a5;
+  if (index == 5) char = a6;
+  if (index == 6) char = a7;
+  if (index == 7) char = a8;
+  if (index == 8) char = a9;
+  
+  var nextState = 0;
+  
+  if (currentFA == FA_START) {
+    if (char == "a") {
+      nextState = FA_SAW_A;
+    } else {
+      nextState = FA_REJECT;
+    }
+  }
+  
+  if (currentFA == FA_SAW_A) {
+    if (char == "b") {
+      nextState = FA_SAW_AB;
+    } else if (char == "a") {
+      nextState = FA_SAW_A; // 保持在FA_SAW_A状态
+    } else {
+      nextState = FA_REJECT;
+    }
+  }
+  
+  if (currentFA == FA_SAW_AB) {
+    if (char == "b") {
+      nextState = FA_ACCEPT;
+    } else {
+      nextState = FA_REJECT;
+    }
+  }
+  
+  if (currentFA == FA_ACCEPT or currentFA == FA_REJECT) {
+    // 重置状态机
+    if (char == "a") {
+      nextState = FA_SAW_A;
+    } else {
+      nextState = FA_START;
+    }
+  }
+  
+  // 更新状态
+  currentFA = nextState;
+  
+  print "字符: " + char + ", 当前状态: " + currentFA;
+  index = index + 1;
+} 
