@@ -10,23 +10,24 @@ import (
 func main() {
 	loxInterpreter := lox.NewLox()
 
-	if len(os.Args) > 2 {
-		fmt.Println("Usage: golox [script]")
+	// 检查命令行参数
+	args := os.Args[1:]
+	if len(args) > 1 {
+		fmt.Println("用法: golox [脚本]")
 		os.Exit(64)
-	} else if len(os.Args) == 2 {
-		// 从文件运行
-		err := loxInterpreter.RunFile(os.Args[1])
+	} else if len(args) == 1 {
+		// 运行脚本文件
+		err := loxInterpreter.RunFile(args[0])
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error reading file: %v\n", err)
+			fmt.Fprintf(os.Stderr, "无法读取文件: %v\n", err)
 			os.Exit(74)
 		}
 	} else {
-		// 以交互模式运行
-		fmt.Println("🚀 Lox语言解释器 v1.0")
-		fmt.Println("👋 输入 'exit()' 或按 Ctrl+D 退出")
+		// 启动交互式REPL
+		fmt.Println("GoLox解释器 v0.1.0")
 		err := loxInterpreter.RunPrompt()
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error in REPL: %v\n", err)
+			fmt.Fprintf(os.Stderr, "REPL错误: %v\n", err)
 			os.Exit(74)
 		}
 	}

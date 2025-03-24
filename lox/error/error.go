@@ -16,6 +16,8 @@ type Reporter interface {
 	Error(tok *token.Token, line int, message string)
 	ReportError(line int, message string)
 	ResetError()
+	HasError() bool
+	HasRuntimeError() bool
 }
 
 // ErrorReporter 错误报告实现

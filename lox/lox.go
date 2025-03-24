@@ -4,31 +4,50 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+
+	errorp "github.com/aixiasang/goLox/lox/error"
+	"github.com/aixiasang/goLox/lox/interpreter"
+	"github.com/aixiasang/goLox/lox/parser"
+	"github.com/aixiasang/goLox/lox/scanner"
 )
 
 // Lox 解释器的主结构
 type Lox struct {
-	hadError bool
+	errorReporter errorp.Reporter
+	interpreter   *interpreter.Interpreter
 }
 
 // NewLox 创建一个新的Lox解释器实例
 func NewLox() *Lox {
+	errorReporter := errorp.NewErrorReporter()
+	interpreter := interpreter.NewInterpreter(errorReporter)
+
 	return &Lox{
-		hadError: false,
+		errorReporter: errorReporter,
+		interpreter:   interpreter,
 	}
 }
 
 // Run 执行给定的源代码
 func (l *Lox) Run(source string) {
-	scanner := NewScanner(source)
+	// 重置错误状态
+	l.errorReporter.ResetError()
+
+	// 扫描标记
+	scanner := scanner.NewScanner(source, l.errorReporter)
 	tokens := scanner.ScanTokens()
 
-	// 仅用于调试打印所有的token
-	for _, token := range tokens {
-		fmt.Println(token)
+	// 解析表达式
+	parser := parser.NewParser(tokens, l.errorReporter)
+	expression := parser.Parse()
+
+	// 如果有语法错误,停止解释
+	if l.errorReporter.HasError() {
+		return
 	}
 
-	// 如果有错误，后续的步骤不会执行（后续会实现解析和执行阶段）
+	// 解释执行表达式
+	l.interpreter.Interpret(expression)
 }
 
 // RunFile 从文件中读取并执行源代码
@@ -40,9 +59,15 @@ func (l *Lox) RunFile(path string) error {
 	l.Run(string(bytes))
 
 	// 如果有语法错误，返回错误状态
-	if l.hadError {
+	if l.errorReporter.HasError() {
 		os.Exit(65)
 	}
+
+	// 如果有运行时错误,返回运行时错误状态
+	if l.errorReporter.HasRuntimeError() {
+		os.Exit(70)
+	}
+
 	return nil
 }
 
@@ -54,6 +79,11 @@ func (l *Lox) RunPrompt() error {
 		fmt.Print("> ")
 		line, err := reader.ReadString('\n')
 		if err != nil {
+			// 如果是EOF,优雅退出
+			if err.Error() == "EOF" {
+				fmt.Println("再见!")
+				return nil
+			}
 			return err
 		}
 
@@ -63,8 +93,6 @@ func (l *Lox) RunPrompt() error {
 		}
 
 		l.Run(line)
-		// 在REPL模式下，错误不会终止程序，重置错误状态
-		l.hadError = false
 	}
 
 	return nil
@@ -72,11 +100,5 @@ func (l *Lox) RunPrompt() error {
 
 // Error 报告错误
 func (l *Lox) Error(line int, message string) {
-	l.Report(line, "", message)
-}
-
-// Report 报告详细的错误信息
-func (l *Lox) Report(line int, where string, message string) {
-	fmt.Fprintf(os.Stderr, "[line %d] Error%s: %s\n", line, where, message)
-	l.hadError = true
+	l.errorReporter.ReportError(line, message)
 }
