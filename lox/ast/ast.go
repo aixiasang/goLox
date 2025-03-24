@@ -4,71 +4,129 @@ import (
 	"github.com/aixiasang/goLox/lox/token"
 )
 
-// Expr 是所有表达式节点的接口
+// Expr 表达式接口
 type Expr interface {
 	Accept(visitor ExprVisitor) interface{}
 }
 
-// ExprVisitor 定义了访问者模式的接口
+// ExprVisitor 访问者接口
 type ExprVisitor interface {
 	VisitBinaryExpr(expr *Binary) interface{}
 	VisitGroupingExpr(expr *Grouping) interface{}
 	VisitLiteralExpr(expr *Literal) interface{}
 	VisitUnaryExpr(expr *Unary) interface{}
+	VisitTernaryExpr(expr *Ternary) interface{}
+	VisitVariableExpr(expr *Variable) interface{}
 }
 
-// Binary 表示二元表达式
+// Binary 二元表达式
 type Binary struct {
-	Left     Expr         // 左操作数
-	Operator *token.Token // 操作符
-	Right    Expr         // 右操作数
+	Left     Expr
+	Operator *token.Token
+	Right    Expr
 }
 
+// Accept 接受访问者
 func (b *Binary) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitBinaryExpr(b)
 }
 
-// Grouping 表示括号分组的表达式
-type Grouping struct {
-	Expression Expr // 括号内的表达式
+// NewBinary 创建二元表达式
+func NewBinary(left Expr, operator *token.Token, right Expr) *Binary {
+	return &Binary{
+		Left:     left,
+		Operator: operator,
+		Right:    right,
+	}
 }
 
+// Grouping 分组表达式
+type Grouping struct {
+	Expression Expr
+}
+
+// Accept 接受访问者
 func (g *Grouping) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitGroupingExpr(g)
 }
 
-// Literal 表示字面量
-type Literal struct {
-	Value interface{} // 字面量的值
+// NewGrouping 创建分组表达式
+func NewGrouping(expression Expr) *Grouping {
+	return &Grouping{
+		Expression: expression,
+	}
 }
 
+// Literal 字面量表达式
+type Literal struct {
+	Value interface{}
+}
+
+// Accept 接受访问者
 func (l *Literal) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitLiteralExpr(l)
 }
 
-// Unary 表示一元表达式
-type Unary struct {
-	Operator *token.Token // 操作符
-	Right    Expr         // 操作数
+// NewLiteral 创建字面量表达式
+func NewLiteral(value interface{}) *Literal {
+	return &Literal{
+		Value: value,
+	}
 }
 
+// Unary 一元表达式
+type Unary struct {
+	Operator *token.Token
+	Right    Expr
+}
+
+// Accept 接受访问者
 func (u *Unary) Accept(visitor ExprVisitor) interface{} {
 	return visitor.VisitUnaryExpr(u)
 }
 
-// 创建表达式节点的构造函数
-func NewBinary(left Expr, operator *token.Token, right Expr) *Binary {
-	return &Binary{Left: left, Operator: operator, Right: right}
-}
-
-func NewGrouping(expression Expr) *Grouping {
-	return &Grouping{Expression: expression}
-}
-
-func NewLiteral(value interface{}) *Literal {
-	return &Literal{Value: value}
-}
-
+// NewUnary 创建一元表达式
 func NewUnary(operator *token.Token, right Expr) *Unary {
-	return &Unary{Operator: operator, Right: right}
+	return &Unary{
+		Operator: operator,
+		Right:    right,
+	}
+}
+
+// Ternary 三元条件表达式
+type Ternary struct {
+	Condition  Expr
+	ThenBranch Expr
+	ElseBranch Expr
+}
+
+// Accept 接受访问者
+func (t *Ternary) Accept(visitor ExprVisitor) interface{} {
+	return visitor.VisitTernaryExpr(t)
+}
+
+// NewTernary 创建三元表达式
+func NewTernary(condition Expr, thenBranch Expr, elseBranch Expr) *Ternary {
+	return &Ternary{
+		Condition:  condition,
+		ThenBranch: thenBranch,
+		ElseBranch: elseBranch,
+	}
+}
+
+// Variable 变量表达式
+type Variable struct {
+	Name *token.Token
+}
+
+// Accept 接受访问者
+func (v *Variable) Accept(visitor ExprVisitor) interface{} {
+	return visitor.VisitVariableExpr(v)
+}
+
+// NewVariable 创建变量表达式
+func NewVariable(name *token.Token) *Variable {
+	return &Variable{
+		Name: name,
+	}
 }

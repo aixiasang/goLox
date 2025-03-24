@@ -65,3 +65,31 @@ func (p *RpnPrinter) VisitUnaryExpr(expr *Unary) interface{} {
 
 	return builder.String()
 }
+
+// VisitTernaryExpr 访问三元表达式
+// 在RPN中，三元运算符可以被视为条件运算，我们用"?:"表示
+func (p *RpnPrinter) VisitTernaryExpr(expr *Ternary) interface{} {
+	var builder strings.Builder
+
+	// 条件
+	builder.WriteString(expr.Condition.Accept(p).(string))
+	builder.WriteString(" ")
+
+	// then分支
+	builder.WriteString(expr.ThenBranch.Accept(p).(string))
+	builder.WriteString(" ")
+
+	// else分支
+	builder.WriteString(expr.ElseBranch.Accept(p).(string))
+	builder.WriteString(" ")
+
+	// 最后是三元操作符标记
+	builder.WriteString("?:")
+
+	return builder.String()
+}
+
+// VisitVariableExpr 访问变量表达式
+func (p *RpnPrinter) VisitVariableExpr(expr *Variable) interface{} {
+	return expr.Name.Lexeme
+}

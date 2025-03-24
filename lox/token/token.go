@@ -2,10 +2,9 @@ package token
 
 import "fmt"
 
-// TokenType 表示词法分析器识别的不同类型的标记
+// TokenType 表示标记类型
 type TokenType int
 
-// Token类型常量定义
 const (
 	// 单字符标记
 	LEFT_PAREN TokenType = iota
@@ -19,6 +18,8 @@ const (
 	SEMICOLON
 	SLASH
 	STAR
+	QUESTION // 问号(用于三元操作符)
+	COLON    // 冒号(用于三元操作符)
 
 	// 一个或两个字符的标记
 	BANG
@@ -69,6 +70,8 @@ var TokenNames = map[TokenType]string{
 	SEMICOLON:     "SEMICOLON",
 	SLASH:         "SLASH",
 	STAR:          "STAR",
+	QUESTION:      "QUESTION",
+	COLON:         "COLON",
 	BANG:          "BANG",
 	BANG_EQUAL:    "BANG_EQUAL",
 	EQUAL:         "EQUAL",
@@ -99,15 +102,15 @@ var TokenNames = map[TokenType]string{
 	EOF:           "EOF",
 }
 
-// Token 表示源代码中的词法标记
+// Token 表示一个标记
 type Token struct {
-	Type    TokenType
-	Lexeme  string      // 原始词素文本
-	Literal interface{} // 字面量值（对字符串、数字等）
-	Line    int         // 行号，用于错误报告
+	Type    TokenType   // 标记类型
+	Lexeme  string      // 词素
+	Literal interface{} // 字面值
+	Line    int         // 行号
 }
 
-// NewToken 创建一个新的Token实例
+// NewToken 创建一个新的标记
 func NewToken(tokenType TokenType, lexeme string, literal interface{}, line int) *Token {
 	return &Token{
 		Type:    tokenType,

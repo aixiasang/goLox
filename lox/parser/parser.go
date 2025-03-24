@@ -6,35 +6,98 @@ import (
 	"github.com/aixiasang/goLox/lox/token"
 )
 
-// Parser 实现递归下降解析器
+// Parser 解析器，将标记序列转换为表达式
 type Parser struct {
-	tokens  []*token.Token // 标记列表
-	current int            // 当前标记索引
-	errors  error.Reporter // 错误报告器
+	tokens        []*token.Token // 标记列表
+	current       int            // 当前标记索引
+	errorReporter error.Reporter // 错误报告器
 }
 
 // NewParser 创建一个新的解析器
-func NewParser(tokens []*token.Token, errors error.Reporter) *Parser {
+func NewParser(tokens []*token.Token, errorReporter error.Reporter) *Parser {
 	return &Parser{
-		tokens:  tokens,
-		current: 0,
-		errors:  errors,
+		tokens:        tokens,
+		current:       0,
+		errorReporter: errorReporter,
 	}
 }
 
-// Parse 解析表达式
+// Parse 解析标记流，生成语法树
 func (p *Parser) Parse() ast.Expr {
 	defer p.handlePanic()
 	return p.expression()
 }
 
-// expression → equality
-func (p *Parser) expression() ast.Expr {
-	return p.equality()
+// handlePanic 处理解析过程中的异常
+func (p *Parser) handlePanic() {
+	if r := recover(); r != nil {
+		if _, ok := r.(error.ParseError); ok {
+			// 已经报告了解析错误，继续执行
+			return
+		}
+		// 重新抛出其他类型的异常
+		panic(r)
+	}
 }
 
-// equality → comparison ( ( "!=" | "==" ) comparison )*
+// expression 解析表达式
+func (p *Parser) expression() ast.Expr {
+	return p.comma()
+}
+
+// comma 解析逗号表达式
+func (p *Parser) comma() ast.Expr {
+	var exprs []ast.Expr
+	exprs = append(exprs, p.conditional())
+
+	for p.match(token.COMMA) {
+		exprs = append(exprs, p.conditional())
+	}
+
+	// 如果只有一个表达式，直接返回
+	if len(exprs) == 1 {
+		return exprs[0]
+	}
+
+	// 从右到左构建二叉树
+	expr := exprs[len(exprs)-1]
+	for i := len(exprs) - 2; i >= 0; i-- {
+		expr = ast.NewBinary(exprs[i], &token.Token{
+			Type:    token.COMMA,
+			Lexeme:  ",",
+			Literal: nil,
+			Line:    p.previous().Line,
+		}, expr)
+	}
+
+	return expr
+}
+
+// conditional 解析条件表达式（三元运算符）
+func (p *Parser) conditional() ast.Expr {
+	expr := p.equality()
+
+	if p.match(token.QUESTION) {
+		thenBranch := p.expression()
+		if !p.match(token.COLON) {
+			p.error(p.peek(), "期望在条件表达式中的 '?' 后有 ':'")
+		}
+		elseBranch := p.conditional()
+		expr = ast.NewTernary(expr, thenBranch, elseBranch)
+	}
+
+	return expr
+}
+
+// equality 解析相等性表达式
 func (p *Parser) equality() ast.Expr {
+	if p.match(token.BANG_EQUAL, token.EQUAL_EQUAL) && p.check(token.NUMBER, token.STRING, token.TRUE, token.FALSE, token.NIL, token.IDENTIFIER, token.LEFT_PAREN) {
+		operator := p.previous()
+		p.error(operator, "二元运算符缺少左操作数")
+		right := p.comparison()
+		return ast.NewBinary(ast.NewLiteral(nil), operator, right)
+	}
+
 	expr := p.comparison()
 
 	for p.match(token.BANG_EQUAL, token.EQUAL_EQUAL) {
@@ -46,8 +109,15 @@ func (p *Parser) equality() ast.Expr {
 	return expr
 }
 
-// comparison → term ( ( ">" | ">=" | "<" | "<=" ) term )*
+// comparison 解析比较表达式
 func (p *Parser) comparison() ast.Expr {
+	if p.match(token.GREATER, token.GREATER_EQUAL, token.LESS, token.LESS_EQUAL) && p.check(token.NUMBER, token.STRING, token.TRUE, token.FALSE, token.NIL, token.IDENTIFIER, token.LEFT_PAREN) {
+		operator := p.previous()
+		p.error(operator, "二元运算符缺少左操作数")
+		right := p.term()
+		return ast.NewBinary(ast.NewLiteral(nil), operator, right)
+	}
+
 	expr := p.term()
 
 	for p.match(token.GREATER, token.GREATER_EQUAL, token.LESS, token.LESS_EQUAL) {
@@ -59,8 +129,15 @@ func (p *Parser) comparison() ast.Expr {
 	return expr
 }
 
-// term → factor ( ( "-" | "+" ) factor )*
+// term 解析项表达式
 func (p *Parser) term() ast.Expr {
+	if p.match(token.PLUS) && p.check(token.NUMBER, token.STRING, token.TRUE, token.FALSE, token.NIL, token.IDENTIFIER, token.LEFT_PAREN) {
+		operator := p.previous()
+		p.error(operator, "二元运算符缺少左操作数")
+		right := p.factor()
+		return ast.NewBinary(ast.NewLiteral(nil), operator, right)
+	}
+
 	expr := p.factor()
 
 	for p.match(token.MINUS, token.PLUS) {
@@ -72,8 +149,15 @@ func (p *Parser) term() ast.Expr {
 	return expr
 }
 
-// factor → unary ( ( "/" | "*" ) unary )*
+// factor 解析因子表达式
 func (p *Parser) factor() ast.Expr {
+	if p.match(token.SLASH, token.STAR) && p.check(token.NUMBER, token.STRING, token.TRUE, token.FALSE, token.NIL, token.IDENTIFIER, token.LEFT_PAREN) {
+		operator := p.previous()
+		p.error(operator, "二元运算符缺少左操作数")
+		right := p.unary()
+		return ast.NewBinary(ast.NewLiteral(nil), operator, right)
+	}
+
 	expr := p.unary()
 
 	for p.match(token.SLASH, token.STAR) {
@@ -85,7 +169,7 @@ func (p *Parser) factor() ast.Expr {
 	return expr
 }
 
-// unary → ( "!" | "-" ) unary | primary
+// unary 解析一元表达式
 func (p *Parser) unary() ast.Expr {
 	if p.match(token.BANG, token.MINUS) {
 		operator := p.previous()
@@ -96,7 +180,7 @@ func (p *Parser) unary() ast.Expr {
 	return p.primary()
 }
 
-// primary → NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")"
+// primary 解析基本表达式
 func (p *Parser) primary() ast.Expr {
 	if p.match(token.FALSE) {
 		return ast.NewLiteral(false)
@@ -112,17 +196,24 @@ func (p *Parser) primary() ast.Expr {
 		return ast.NewLiteral(p.previous().Literal)
 	}
 
+	if p.match(token.IDENTIFIER) {
+		return ast.NewVariable(p.previous())
+	}
+
 	if p.match(token.LEFT_PAREN) {
 		expr := p.expression()
-		p.consume(token.RIGHT_PAREN, "期待')'。")
+		p.consume(token.RIGHT_PAREN, "期望在表达式后有 ')'")
 		return ast.NewGrouping(expr)
 	}
 
-	panic(p.error(p.peek(), "期待表达式。"))
+	// 遇到错误，尝试同步恢复
+	p.error(p.peek(), "期望表达式")
+	return nil
 }
 
 // 辅助方法
 
+// match 检查当前标记是否匹配任何给定类型，如果匹配则消费
 func (p *Parser) match(types ...token.TokenType) bool {
 	for _, t := range types {
 		if p.check(t) {
@@ -133,13 +224,22 @@ func (p *Parser) match(types ...token.TokenType) bool {
 	return false
 }
 
-func (p *Parser) check(t token.TokenType) bool {
+// check 检查当前标记是否为指定类型
+func (p *Parser) check(types ...token.TokenType) bool {
 	if p.isAtEnd() {
 		return false
 	}
-	return p.peek().Type == t
+
+	current := p.peek().Type
+	for _, t := range types {
+		if current == t {
+			return true
+		}
+	}
+	return false
 }
 
+// advance 消费当前标记并返回
 func (p *Parser) advance() *token.Token {
 	if !p.isAtEnd() {
 		p.current++
@@ -147,42 +247,38 @@ func (p *Parser) advance() *token.Token {
 	return p.previous()
 }
 
+// isAtEnd 检查是否已经到达标记流结尾
 func (p *Parser) isAtEnd() bool {
 	return p.peek().Type == token.EOF
 }
 
+// peek 返回当前标记但不消费
 func (p *Parser) peek() *token.Token {
 	return p.tokens[p.current]
 }
 
+// previous 返回最后一个消费的标记
 func (p *Parser) previous() *token.Token {
 	return p.tokens[p.current-1]
 }
 
-func (p *Parser) consume(t token.TokenType, message string) *token.Token {
-	if p.check(t) {
+// consume 消费当前标记，如果不匹配则报错
+func (p *Parser) consume(tokenType token.TokenType, message string) *token.Token {
+	if p.check(tokenType) {
 		return p.advance()
 	}
 
-	panic(p.error(p.peek(), message))
+	p.error(p.peek(), message)
+	panic(error.ParseError{Token: p.peek(), Message: message})
 }
 
-// 错误处理
-
-func (p *Parser) error(token *token.Token, message string) error.ParseError {
-	p.errors.Error(token, message)
-	return error.NewParseError()
+// error 报告当前标记的错误
+func (p *Parser) error(token *token.Token, message string) {
+	p.errorReporter.Error(token, 0, message)
+	panic(error.ParseError{Token: token, Message: message})
 }
 
-func (p *Parser) handlePanic() {
-	if r := recover(); r != nil {
-		if _, ok := r.(error.ParseError); !ok {
-			panic(r)
-		}
-	}
-}
-
-// synchronize 在发生错误后重新同步解析器
+// synchronize 尝试在错误后同步解析器状态
 func (p *Parser) synchronize() {
 	p.advance()
 
@@ -192,8 +288,7 @@ func (p *Parser) synchronize() {
 		}
 
 		switch p.peek().Type {
-		case token.CLASS, token.FUN, token.VAR, token.FOR,
-			token.IF, token.WHILE, token.PRINT, token.RETURN:
+		case token.CLASS, token.FUN, token.VAR, token.FOR, token.IF, token.WHILE, token.PRINT, token.RETURN:
 			return
 		}
 

@@ -41,6 +41,16 @@ func (p *AstPrinter) VisitUnaryExpr(expr *Unary) interface{} {
 	return p.parenthesize(expr.Operator.Lexeme, expr.Right)
 }
 
+// VisitTernaryExpr 访问三元表达式
+func (p *AstPrinter) VisitTernaryExpr(expr *Ternary) interface{} {
+	return p.parenthesize("?:", expr.Condition, expr.ThenBranch, expr.ElseBranch)
+}
+
+// VisitVariableExpr 访问变量表达式
+func (p *AstPrinter) VisitVariableExpr(expr *Variable) interface{} {
+	return expr.Name.Lexeme
+}
+
 // parenthesize 将表达式转换为带括号的形式
 func (p *AstPrinter) parenthesize(name string, exprs ...Expr) string {
 	var builder strings.Builder
