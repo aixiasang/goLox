@@ -1,0 +1,81 @@
+// 变量声明和赋值
+var a = 10;
+var b = 20;
+print a + b;   // 期望输出: 30
+
+// 赋值表达式
+a = 42;
+print a;       // 期望输出: 42
+
+// 代码块和作用域
+{
+  var a = 100;  // 局部变量，覆盖外部的a
+  print a;      // 期望输出: 100
+  
+  var c = a + b;
+  print c;      // 期望输出: 120
+}
+
+print a;        // 期望输出: 42（外部的a没有改变）
+
+// 条件语句
+if (a > b) {
+  print "a 大于 b";  // 期望输出，因为a=42, b=20
+} else {
+  print "a 不大于 b";
+}
+
+// 另一个条件语句测试（让条件为假）
+var small = 5;
+var big = 10;
+if (small > big) {
+  print "small大于big";
+} else {
+  print "small不大于big";  // 期望输出
+}
+
+// 逻辑运算符
+var t = true;
+var f = false;
+print t and f;  // 期望输出: false
+print t or f;   // 期望输出: true
+print !t;       // 期望输出: false
+
+// 循环语句
+var i = 0;
+var sum = 0;
+while (i < 5) {
+  sum = sum + i;
+  i = i + 1;
+}
+print sum;     // 期望输出: 10 (0+1+2+3+4)
+
+// for循环（语法糖）
+sum = 0;
+for (var j = 0; j < 5; j = j + 1) {
+  sum = sum + j;
+}
+print sum;     // 期望输出: 10
+
+// 组合测试
+var x = 1;
+var y = 2;
+var result = 0;
+
+if (x < y) {
+  result = 100;
+} else {
+  result = 200;
+}
+
+print result;  // 期望输出: 100
+
+// 嵌套代码块
+{
+  var outer = 1;
+  {
+    var inner = 2;
+    print outer + inner;  // 期望输出: 3
+  }
+  // print inner;  // 如果取消注释，会产生错误，因为inner在内部作用域中
+} 

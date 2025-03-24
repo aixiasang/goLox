@@ -6,7 +6,7 @@ import (
 	"github.com/aixiasang/goLox/lox/token"
 )
 
-// Parser 解析器，将标记序列转换为表达式
+// Parser 解析器，将标记序列转换为AST
 type Parser struct {
 	tokens        []*token.Token // 标记列表
 	current       int            // 当前标记索引
@@ -23,16 +23,23 @@ func NewParser(tokens []*token.Token, errorReporter error.Reporter) *Parser {
 }
 
 // Parse 解析标记流，生成语法树
-func (p *Parser) Parse() ast.Expr {
+func (p *Parser) Parse() []ast.Stmt {
 	defer p.handlePanic()
-	return p.expression()
+
+	var statements []ast.Stmt
+	for !p.isAtEnd() {
+		statements = append(statements, p.declaration())
+	}
+
+	return statements
 }
 
 // handlePanic 处理解析过程中的异常
 func (p *Parser) handlePanic() {
 	if r := recover(); r != nil {
 		if _, ok := r.(error.ParseError); ok {
-			// 已经报告了解析错误，继续执行
+			// 已经报告了解析错误，进行同步
+			p.synchronize()
 			return
 		}
 		// 重新抛出其他类型的异常
@@ -40,9 +47,223 @@ func (p *Parser) handlePanic() {
 	}
 }
 
+// declaration 解析声明语句
+func (p *Parser) declaration() ast.Stmt {
+	defer func() {
+		if r := recover(); r != nil {
+			if _, ok := r.(error.ParseError); ok {
+				p.synchronize()
+			} else {
+				panic(r)
+			}
+		}
+	}()
+
+	if p.match(token.VAR) {
+		return p.varDeclaration()
+	}
+
+	return p.statement()
+}
+
+// varDeclaration 解析变量声明
+func (p *Parser) varDeclaration() ast.Stmt {
+	name := p.consume(token.IDENTIFIER, "期望变量名")
+
+	var initializer ast.Expr
+	if p.match(token.EQUAL) {
+		initializer = p.expression()
+	}
+
+	p.consume(token.SEMICOLON, "期望在变量声明后有 ';'")
+	return ast.NewVar(name, initializer)
+}
+
+// statement 解析语句
+func (p *Parser) statement() ast.Stmt {
+	if p.match(token.PRINT) {
+		return p.printStatement()
+	}
+
+	if p.match(token.LEFT_BRACE) {
+		return ast.NewBlock(p.block())
+	}
+
+	if p.match(token.IF) {
+		return p.ifStatement()
+	}
+
+	if p.match(token.WHILE) {
+		return p.whileStatement()
+	}
+
+	if p.match(token.FOR) {
+		return p.forStatement()
+	}
+
+	return p.expressionStatement()
+}
+
+// block 解析代码块
+func (p *Parser) block() []ast.Stmt {
+	var statements []ast.Stmt
+
+	for !p.check(token.RIGHT_BRACE) && !p.isAtEnd() {
+		statements = append(statements, p.declaration())
+	}
+
+	p.consume(token.RIGHT_BRACE, "期望在块末尾有 '}'")
+	return statements
+}
+
+// ifStatement 解析if语句
+func (p *Parser) ifStatement() ast.Stmt {
+	p.consume(token.LEFT_PAREN, "期望在 'if' 后有 '('")
+	condition := p.expression()
+	p.consume(token.RIGHT_PAREN, "期望在条件后有 ')'")
+
+	thenBranch := p.statement()
+	var elseBranch ast.Stmt
+
+	if p.match(token.ELSE) {
+		elseBranch = p.statement()
+	}
+
+	return ast.NewIf(condition, thenBranch, elseBranch)
+}
+
+// whileStatement 解析while语句
+func (p *Parser) whileStatement() ast.Stmt {
+	p.consume(token.LEFT_PAREN, "期望在 'while' 后有 '('")
+	condition := p.expression()
+	p.consume(token.RIGHT_PAREN, "期望在条件后有 ')'")
+
+	body := p.statement()
+
+	return ast.NewWhile(condition, body)
+}
+
+// forStatement 解析for语句（语法糖，转换为while语句）
+func (p *Parser) forStatement() ast.Stmt {
+	p.consume(token.LEFT_PAREN, "期望在 'for' 后有 '('")
+
+	// 初始化部分
+	var initializer ast.Stmt
+	if p.match(token.SEMICOLON) {
+		// 没有初始化部分
+		initializer = nil
+	} else if p.match(token.VAR) {
+		initializer = p.varDeclaration()
+	} else {
+		initializer = p.expressionStatement()
+	}
+
+	// 条件部分
+	var condition ast.Expr
+	if !p.check(token.SEMICOLON) {
+		condition = p.expression()
+	}
+	p.consume(token.SEMICOLON, "期望在循环条件后有 ';'")
+
+	// 增量部分
+	var increment ast.Expr
+	if !p.check(token.RIGHT_PAREN) {
+		increment = p.expression()
+	}
+	p.consume(token.RIGHT_PAREN, "期望在 for 子句后有 ')'")
+
+	// 循环体
+	body := p.statement()
+
+	// 如果有增量，将其添加到循环体末尾
+	if increment != nil {
+		body = ast.NewBlock([]ast.Stmt{
+			body,
+			ast.NewExpression(increment),
+		})
+	}
+
+	// 如果没有条件，则使用 true
+	if condition == nil {
+		condition = ast.NewLiteral(true)
+	}
+
+	// 创建 while 循环
+	body = ast.NewWhile(condition, body)
+
+	// 如果有初始化部分，将其放在循环前
+	if initializer != nil {
+		body = ast.NewBlock([]ast.Stmt{
+			initializer,
+			body,
+		})
+	}
+
+	return body
+}
+
+// printStatement 解析打印语句
+func (p *Parser) printStatement() ast.Stmt {
+	value := p.expression()
+	p.consume(token.SEMICOLON, "期望在语句后有 ';'")
+	return ast.NewPrint(value)
+}
+
+// expressionStatement 解析表达式语句
+func (p *Parser) expressionStatement() ast.Stmt {
+	expr := p.expression()
+	p.consume(token.SEMICOLON, "期望在语句后有 ';'")
+	return ast.NewExpression(expr)
+}
+
 // expression 解析表达式
 func (p *Parser) expression() ast.Expr {
-	return p.comma()
+	return p.assignment()
+}
+
+// assignment 解析赋值表达式
+func (p *Parser) assignment() ast.Expr {
+	expr := p.or()
+
+	if p.match(token.EQUAL) {
+		equals := p.previous()
+		value := p.assignment()
+
+		if variable, ok := expr.(*ast.Variable); ok {
+			name := variable.Name
+			return ast.NewAssign(name, value)
+		}
+
+		p.error(equals, "无效的赋值目标")
+	}
+
+	return expr
+}
+
+// or 解析逻辑OR表达式
+func (p *Parser) or() ast.Expr {
+	expr := p.and()
+
+	for p.match(token.OR) {
+		operator := p.previous()
+		right := p.and()
+		expr = ast.NewLogical(expr, operator, right)
+	}
+
+	return expr
+}
+
+// and 解析逻辑AND表达式
+func (p *Parser) and() ast.Expr {
+	expr := p.comma()
+
+	for p.match(token.AND) {
+		operator := p.previous()
+		right := p.comma()
+		expr = ast.NewLogical(expr, operator, right)
+	}
+
+	return expr
 }
 
 // comma 解析逗号表达式

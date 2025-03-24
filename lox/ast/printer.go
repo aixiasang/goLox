@@ -51,16 +51,49 @@ func (p *AstPrinter) VisitVariableExpr(expr *Variable) interface{} {
 	return expr.Name.Lexeme
 }
 
+// VisitAssignExpr 访问赋值表达式
+func (p *AstPrinter) VisitAssignExpr(expr *Assign) interface{} {
+	return p.parenthesize2("=", expr.Name.Lexeme, expr.Value)
+}
+
+// VisitLogicalExpr 访问逻辑表达式
+func (p *AstPrinter) VisitLogicalExpr(expr *Logical) interface{} {
+	return p.parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right)
+}
+
 // parenthesize 将表达式转换为带括号的形式
 func (p *AstPrinter) parenthesize(name string, exprs ...Expr) string {
 	var builder strings.Builder
 
 	builder.WriteString("(")
 	builder.WriteString(name)
+
 	for _, expr := range exprs {
 		builder.WriteString(" ")
 		builder.WriteString(expr.Accept(p).(string))
 	}
+
+	builder.WriteString(")")
+
+	return builder.String()
+}
+
+// parenthesize2 将表达式转换为带括号的形式，第一个参数可以是字符串
+func (p *AstPrinter) parenthesize2(name string, arg interface{}, expr Expr) string {
+	var builder strings.Builder
+
+	builder.WriteString("(")
+	builder.WriteString(name)
+	builder.WriteString(" ")
+
+	if str, ok := arg.(string); ok {
+		builder.WriteString(str)
+	} else if e, ok := arg.(Expr); ok {
+		builder.WriteString(e.Accept(p).(string))
+	}
+
+	builder.WriteString(" ")
+	builder.WriteString(expr.Accept(p).(string))
 	builder.WriteString(")")
 
 	return builder.String()

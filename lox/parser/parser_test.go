@@ -20,6 +20,7 @@ func TestParser(t *testing.T) {
 				token.NewToken(token.NUMBER, "1", 1.0, 1),
 				token.NewToken(token.PLUS, "+", nil, 1),
 				token.NewToken(token.NUMBER, "2", 2.0, 1),
+				token.NewToken(token.SEMICOLON, ";", nil, 1),
 				token.NewToken(token.EOF, "", nil, 1),
 			},
 			expected: "1 2 +",
@@ -34,6 +35,7 @@ func TestParser(t *testing.T) {
 				token.NewToken(token.RIGHT_PAREN, ")", nil, 1),
 				token.NewToken(token.STAR, "*", nil, 1),
 				token.NewToken(token.NUMBER, "3", 3.0, 1),
+				token.NewToken(token.SEMICOLON, ";", nil, 1),
 				token.NewToken(token.EOF, "", nil, 1),
 			},
 			expected: "1 2 + 3 *",
@@ -43,6 +45,7 @@ func TestParser(t *testing.T) {
 			tokens: []*token.Token{
 				token.NewToken(token.MINUS, "-", nil, 1),
 				token.NewToken(token.NUMBER, "123", 123.0, 1),
+				token.NewToken(token.SEMICOLON, ";", nil, 1),
 				token.NewToken(token.EOF, "", nil, 1),
 			},
 			expected: "123 -",
@@ -57,6 +60,7 @@ func TestParser(t *testing.T) {
 				token.NewToken(token.IDENTIFIER, "c", nil, 1),
 				token.NewToken(token.COLON, ":", nil, 1),
 				token.NewToken(token.IDENTIFIER, "d", nil, 1),
+				token.NewToken(token.SEMICOLON, ";", nil, 1),
 				token.NewToken(token.EOF, "", nil, 1),
 			},
 			expected: "a b > c d ?:",
@@ -73,6 +77,7 @@ func TestParser(t *testing.T) {
 				token.NewToken(token.IDENTIFIER, "d", nil, 1),
 				token.NewToken(token.COLON, ":", nil, 1),
 				token.NewToken(token.IDENTIFIER, "e", nil, 1),
+				token.NewToken(token.SEMICOLON, ";", nil, 1),
 				token.NewToken(token.EOF, "", nil, 1),
 			},
 			expected: "a b c d e ?: ?:",
@@ -85,6 +90,7 @@ func TestParser(t *testing.T) {
 				token.NewToken(token.IDENTIFIER, "b", nil, 1),
 				token.NewToken(token.COMMA, ",", nil, 1),
 				token.NewToken(token.IDENTIFIER, "c", nil, 1),
+				token.NewToken(token.SEMICOLON, ";", nil, 1),
 				token.NewToken(token.EOF, "", nil, 1),
 			},
 			expected: "a b c , ,",
@@ -95,7 +101,21 @@ func TestParser(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			errors := error.NewErrorReporter()
 			parser := NewParser(tt.tokens, errors)
-			expr := parser.Parse()
+			statements := parser.Parse()
+
+			// 确保至少有一个语句
+			if len(statements) == 0 {
+				t.Fatalf("解析失败，未生成任何语句")
+			}
+
+			// 获取第一个语句，应该是表达式语句
+			exprStmt, ok := statements[0].(*ast.Expression)
+			if !ok {
+				t.Fatalf("期望表达式语句，但获得了 %T", statements[0])
+			}
+
+			// 从表达式语句中获取表达式
+			expr := exprStmt.Expr
 
 			// 使用RPN打印器验证结果
 			printer := ast.NewRpnPrinter()
@@ -123,6 +143,7 @@ func TestParserErrorHandling(t *testing.T) {
 			tokens: []*token.Token{
 				token.NewToken(token.PLUS, "+", nil, 1),
 				token.NewToken(token.NUMBER, "5", 5.0, 1),
+				token.NewToken(token.SEMICOLON, ";", nil, 1),
 				token.NewToken(token.EOF, "", nil, 1),
 			},
 			expectErr: true,
@@ -134,6 +155,7 @@ func TestParserErrorHandling(t *testing.T) {
 				token.NewToken(token.NUMBER, "1", 1.0, 1),
 				token.NewToken(token.PLUS, "+", nil, 1),
 				token.NewToken(token.NUMBER, "2", 2.0, 1),
+				token.NewToken(token.SEMICOLON, ";", nil, 1),
 				token.NewToken(token.EOF, "", nil, 1),
 			},
 			expectErr: true,
@@ -144,6 +166,7 @@ func TestParserErrorHandling(t *testing.T) {
 				token.NewToken(token.IDENTIFIER, "a", nil, 1),
 				token.NewToken(token.QUESTION, "?", nil, 1),
 				token.NewToken(token.IDENTIFIER, "b", nil, 1),
+				token.NewToken(token.SEMICOLON, ";", nil, 1),
 				token.NewToken(token.EOF, "", nil, 1),
 			},
 			expectErr: true,

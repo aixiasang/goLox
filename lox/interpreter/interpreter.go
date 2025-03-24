@@ -5,27 +5,102 @@ import (
 	"math"
 
 	"github.com/aixiasang/goLox/lox/ast"
+	"github.com/aixiasang/goLox/lox/environment"
 	"github.com/aixiasang/goLox/lox/error"
 	"github.com/aixiasang/goLox/lox/token"
 )
 
-// Interpreter 实现表达式求值
+// Interpreter 实现表达式求值和语句执行
 type Interpreter struct {
 	errorReporter error.Reporter
+	environment   *environment.Environment
 }
 
 // NewInterpreter 创建一个新的解释器
 func NewInterpreter(errorReporter error.Reporter) *Interpreter {
 	return &Interpreter{
 		errorReporter: errorReporter,
+		environment:   environment.NewEnvironment(),
 	}
 }
 
-// Interpret 解释执行表达式
-func (i *Interpreter) Interpret(expr ast.Expr) {
+// Interpret 解释执行语句列表
+func (i *Interpreter) Interpret(statements []ast.Stmt) {
 	defer i.handlePanic()
-	value := i.evaluate(expr)
+
+	for _, stmt := range statements {
+		i.execute(stmt)
+	}
+}
+
+// execute 执行一条语句
+func (i *Interpreter) execute(stmt ast.Stmt) {
+	stmt.Accept(i)
+}
+
+// executeBlock 在给定环境中执行语句块
+func (i *Interpreter) executeBlock(statements []ast.Stmt, env *environment.Environment) {
+	previous := i.environment
+
+	// 恢复原来的环境，即使panic也要确保恢复
+	defer func() {
+		i.environment = previous
+	}()
+
+	i.environment = env
+
+	for _, statement := range statements {
+		i.execute(statement)
+	}
+}
+
+// VisitBlockStmt 处理代码块语句
+func (i *Interpreter) VisitBlockStmt(stmt *ast.Block) interface{} {
+	i.executeBlock(stmt.Statements, environment.NewEnclosedEnvironment(i.environment))
+	return nil
+}
+
+// VisitExpressionStmt 处理表达式语句
+func (i *Interpreter) VisitExpressionStmt(stmt *ast.Expression) interface{} {
+	i.evaluate(stmt.Expr)
+	return nil
+}
+
+// VisitIfStmt 处理条件语句
+func (i *Interpreter) VisitIfStmt(stmt *ast.If) interface{} {
+	if i.isTruthy(i.evaluate(stmt.Condition)) {
+		i.execute(stmt.ThenBranch)
+	} else if stmt.ElseBranch != nil {
+		i.execute(stmt.ElseBranch)
+	}
+	return nil
+}
+
+// VisitPrintStmt 处理打印语句
+func (i *Interpreter) VisitPrintStmt(stmt *ast.Print) interface{} {
+	value := i.evaluate(stmt.Expr)
 	fmt.Println(i.stringify(value))
+	return nil
+}
+
+// VisitVarStmt 处理变量声明语句
+func (i *Interpreter) VisitVarStmt(stmt *ast.Var) interface{} {
+	var value interface{}
+
+	if stmt.Initializer != nil {
+		value = i.evaluate(stmt.Initializer)
+	}
+
+	i.environment.Define(stmt.Name.Lexeme, value)
+	return nil
+}
+
+// VisitWhileStmt 处理循环语句
+func (i *Interpreter) VisitWhileStmt(stmt *ast.While) interface{} {
+	for i.isTruthy(i.evaluate(stmt.Condition)) {
+		i.execute(stmt.Body)
+	}
+	return nil
 }
 
 // handlePanic 处理解释过程中的异常
@@ -44,6 +119,13 @@ func (i *Interpreter) handlePanic() {
 // evaluate 求值表达式
 func (i *Interpreter) evaluate(expr ast.Expr) interface{} {
 	return expr.Accept(i)
+}
+
+// VisitAssignExpr 处理赋值表达式
+func (i *Interpreter) VisitAssignExpr(expr *ast.Assign) interface{} {
+	value := i.evaluate(expr.Value)
+	i.environment.Assign(expr.Name, value)
+	return value
 }
 
 // VisitLiteralExpr 处理字面量表达式
@@ -137,8 +219,26 @@ func (i *Interpreter) VisitTernaryExpr(expr *ast.Ternary) interface{} {
 
 // VisitVariableExpr 处理变量表达式
 func (i *Interpreter) VisitVariableExpr(expr *ast.Variable) interface{} {
-	// 目前我们还没有环境来存储变量，返回nil
-	panic(error.RuntimeError{Token: expr.Name, Message: "未定义的变量。"})
+	return i.environment.Get(expr.Name)
+}
+
+// VisitLogicalExpr 处理逻辑表达式
+func (i *Interpreter) VisitLogicalExpr(expr *ast.Logical) interface{} {
+	left := i.evaluate(expr.Left)
+
+	// 逻辑运算的短路处理
+	if expr.Operator.Type == token.OR {
+		if i.isTruthy(left) {
+			return left // 短路求值
+		}
+	} else { // AND
+		if !i.isTruthy(left) {
+			return left // 短路求值
+		}
+	}
+
+	// 如果没有短路，计算右侧的值
+	return i.evaluate(expr.Right)
 }
 
 // 工具方法

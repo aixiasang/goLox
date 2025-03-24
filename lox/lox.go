@@ -37,17 +37,17 @@ func (l *Lox) Run(source string) {
 	scanner := scanner.NewScanner(source, l.errorReporter)
 	tokens := scanner.ScanTokens()
 
-	// 解析表达式
+	// 解析语句
 	parser := parser.NewParser(tokens, l.errorReporter)
-	expression := parser.Parse()
+	statements := parser.Parse()
 
 	// 如果有语法错误,停止解释
 	if l.errorReporter.HasError() {
 		return
 	}
 
-	// 解释执行表达式
-	l.interpreter.Interpret(expression)
+	// 解释执行语句
+	l.interpreter.Interpret(statements)
 }
 
 // RunFile 从文件中读取并执行源代码
@@ -93,6 +93,8 @@ func (l *Lox) RunPrompt() error {
 		}
 
 		l.Run(line)
+		// 在REPL中重置错误状态，以便用户可以继续
+		l.errorReporter.ResetError()
 	}
 
 	return nil

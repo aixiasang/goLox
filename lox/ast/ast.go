@@ -17,6 +17,8 @@ type ExprVisitor interface {
 	VisitUnaryExpr(expr *Unary) interface{}
 	VisitTernaryExpr(expr *Ternary) interface{}
 	VisitVariableExpr(expr *Variable) interface{}
+	VisitAssignExpr(expr *Assign) interface{}
+	VisitLogicalExpr(expr *Logical) interface{}
 }
 
 // Binary 二元表达式
@@ -128,5 +130,45 @@ func (v *Variable) Accept(visitor ExprVisitor) interface{} {
 func NewVariable(name *token.Token) *Variable {
 	return &Variable{
 		Name: name,
+	}
+}
+
+// Assign 赋值表达式
+type Assign struct {
+	Name  *token.Token
+	Value Expr
+}
+
+// Accept 接受访问者
+func (a *Assign) Accept(visitor ExprVisitor) interface{} {
+	return visitor.VisitAssignExpr(a)
+}
+
+// NewAssign 创建赋值表达式
+func NewAssign(name *token.Token, value Expr) *Assign {
+	return &Assign{
+		Name:  name,
+		Value: value,
+	}
+}
+
+// Logical 逻辑表达式
+type Logical struct {
+	Left     Expr
+	Operator *token.Token
+	Right    Expr
+}
+
+// Accept 接受访问者
+func (l *Logical) Accept(visitor ExprVisitor) interface{} {
+	return visitor.VisitLogicalExpr(l)
+}
+
+// NewLogical 创建逻辑表达式
+func NewLogical(left Expr, operator *token.Token, right Expr) *Logical {
+	return &Logical{
+		Left:     left,
+		Operator: operator,
+		Right:    right,
 	}
 }

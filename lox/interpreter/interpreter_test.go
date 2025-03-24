@@ -182,13 +182,203 @@ func TestGroupingExpression(t *testing.T) {
 	}
 }
 
+func TestVariableDeclarationAndAssignment(t *testing.T) {
+	errorReporter := &MockErrorReporter{}
+	interpreter := NewInterpreter(errorReporter)
+
+	// 声明变量
+	varStmt := ast.NewVar(
+		token.NewToken(token.IDENTIFIER, "x", nil, 1),
+		ast.NewLiteral(42.0),
+	)
+
+	// 执行声明语句
+	interpreter.execute(varStmt)
+
+	// 读取变量
+	varExpr := ast.NewVariable(token.NewToken(token.IDENTIFIER, "x", nil, 1))
+	value := interpreter.evaluate(varExpr)
+
+	if value != 42.0 {
+		t.Errorf("Variable 'x' should be 42.0, got %v", value)
+	}
+
+	// 赋值给变量
+	assignExpr := ast.NewAssign(
+		token.NewToken(token.IDENTIFIER, "x", nil, 1),
+		ast.NewLiteral(100.0),
+	)
+
+	assignValue := interpreter.evaluate(assignExpr)
+	if assignValue != 100.0 {
+		t.Errorf("Assignment should return 100.0, got %v", assignValue)
+	}
+
+	// 验证变量值被更新
+	updatedValue := interpreter.evaluate(varExpr)
+	if updatedValue != 100.0 {
+		t.Errorf("After assignment, 'x' should be 100.0, got %v", updatedValue)
+	}
+}
+
+func TestBlockStatement(t *testing.T) {
+	errorReporter := &MockErrorReporter{}
+	interpreter := NewInterpreter(errorReporter)
+
+	// 全局变量
+	globalVarStmt := ast.NewVar(
+		token.NewToken(token.IDENTIFIER, "x", nil, 1),
+		ast.NewLiteral(10.0),
+	)
+
+	// 块内变量
+	blockVarStmt := ast.NewVar(
+		token.NewToken(token.IDENTIFIER, "x", nil, 2),
+		ast.NewLiteral(20.0),
+	)
+
+	// 块内的另一个变量
+	blockVarY := ast.NewVar(
+		token.NewToken(token.IDENTIFIER, "y", nil, 3),
+		ast.NewLiteral(30.0),
+	)
+
+	// 创建块
+	blockStmt := ast.NewBlock([]ast.Stmt{
+		blockVarStmt,
+		blockVarY,
+	})
+
+	// 执行全局变量声明
+	interpreter.execute(globalVarStmt)
+
+	// 执行块
+	interpreter.execute(blockStmt)
+
+	// 块执行后，x应该仍然是10.0（全局变量）
+	xExpr := ast.NewVariable(token.NewToken(token.IDENTIFIER, "x", nil, 4))
+	xValue := interpreter.evaluate(xExpr)
+
+	if xValue != 10.0 {
+		t.Errorf("After block execution, global 'x' should be 10.0, got %v", xValue)
+	}
+
+	// y变量不应该存在于全局作用域
+	yExpr := ast.NewVariable(token.NewToken(token.IDENTIFIER, "y", nil, 5))
+
+	// 使用匿名函数捕获panic
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("Expected panic when accessing 'y' outside of block")
+			}
+		}()
+
+		interpreter.evaluate(yExpr)
+	}()
+}
+
+func TestIfStatement(t *testing.T) {
+	errorReporter := &MockErrorReporter{}
+	interpreter := NewInterpreter(errorReporter)
+
+	// 测试变量
+	xToken := token.NewToken(token.IDENTIFIER, "x", nil, 1)
+	interpreter.environment.Define(xToken.Lexeme, 0.0)
+
+	// 创建if语句：if (true) x = 1; else x = 2;
+	ifStmt := ast.NewIf(
+		ast.NewLiteral(true),
+		ast.NewExpression(ast.NewAssign(xToken, ast.NewLiteral(1.0))),
+		ast.NewExpression(ast.NewAssign(xToken, ast.NewLiteral(2.0))),
+	)
+
+	// 执行if语句
+	interpreter.execute(ifStmt)
+
+	// 检查x的值，应该是1.0
+	xExpr := ast.NewVariable(xToken)
+	xValue := interpreter.evaluate(xExpr)
+
+	if xValue != 1.0 {
+		t.Errorf("After if statement with true condition, 'x' should be 1.0, got %v", xValue)
+	}
+
+	// 创建if语句：if (false) x = 3; else x = 4;
+	ifStmt2 := ast.NewIf(
+		ast.NewLiteral(false),
+		ast.NewExpression(ast.NewAssign(xToken, ast.NewLiteral(3.0))),
+		ast.NewExpression(ast.NewAssign(xToken, ast.NewLiteral(4.0))),
+	)
+
+	// 执行if语句
+	interpreter.execute(ifStmt2)
+
+	// 检查x的值，应该是4.0
+	xValue = interpreter.evaluate(xExpr)
+
+	if xValue != 4.0 {
+		t.Errorf("After if statement with false condition, 'x' should be 4.0, got %v", xValue)
+	}
+}
+
+func TestWhileStatement(t *testing.T) {
+	errorReporter := &MockErrorReporter{}
+	interpreter := NewInterpreter(errorReporter)
+
+	// 测试变量
+	iToken := token.NewToken(token.IDENTIFIER, "i", nil, 1)
+	interpreter.environment.Define(iToken.Lexeme, 0.0)
+
+	// 创建while语句：while (i < 5) i = i + 1;
+	whileStmt := ast.NewWhile(
+		ast.NewBinary(
+			ast.NewVariable(iToken),
+			token.NewToken(token.LESS, "<", nil, 1),
+			ast.NewLiteral(5.0),
+		),
+		ast.NewExpression(ast.NewAssign(
+			iToken,
+			ast.NewBinary(
+				ast.NewVariable(iToken),
+				token.NewToken(token.PLUS, "+", nil, 1),
+				ast.NewLiteral(1.0),
+			),
+		)),
+	)
+
+	// 执行while语句
+	interpreter.execute(whileStmt)
+
+	// 检查i的值，应该是5.0
+	iExpr := ast.NewVariable(iToken)
+	iValue := interpreter.evaluate(iExpr)
+
+	if iValue != 5.0 {
+		t.Errorf("After while loop, 'i' should be 5.0, got %v", iValue)
+	}
+}
+
 func TestRuntimeErrors(t *testing.T) {
 	errorReporter := &MockErrorReporter{}
 	interpreter := NewInterpreter(errorReporter)
 
 	// 一元运算符错误: -"hello"
 	unaryExpr := ast.NewUnary(token.NewToken(token.MINUS, "-", nil, 1), ast.NewLiteral("hello"))
-	interpreter.Interpret(unaryExpr)
+
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("Expected panic for unary operator error")
+			}
+		}()
+		interpreter.evaluate(unaryExpr)
+	}()
+
+	// 执行语句列表确保错误被捕获
+	statements := []ast.Stmt{ast.NewExpression(unaryExpr)}
+	interpreter.Interpret(statements)
+
 	if len(errorReporter.Errors) == 0 {
 		t.Errorf("期望一元运算符错误")
 	}
@@ -196,7 +386,9 @@ func TestRuntimeErrors(t *testing.T) {
 
 	// 二元运算符错误: "hello" - 5
 	binaryExpr := ast.NewBinary(ast.NewLiteral("hello"), token.NewToken(token.MINUS, "-", nil, 1), ast.NewLiteral(5.0))
-	interpreter.Interpret(binaryExpr)
+	statements = []ast.Stmt{ast.NewExpression(binaryExpr)}
+	interpreter.Interpret(statements)
+
 	if len(errorReporter.Errors) == 0 {
 		t.Errorf("期望二元运算符错误")
 	}
@@ -204,7 +396,9 @@ func TestRuntimeErrors(t *testing.T) {
 
 	// 类型错误: "hello" + 5
 	typeErrorExpr := ast.NewBinary(ast.NewLiteral("hello"), token.NewToken(token.PLUS, "+", nil, 1), ast.NewLiteral(5.0))
-	interpreter.Interpret(typeErrorExpr)
+	statements = []ast.Stmt{ast.NewExpression(typeErrorExpr)}
+	interpreter.Interpret(statements)
+
 	if len(errorReporter.Errors) == 0 {
 		t.Errorf("期望类型错误")
 	}
@@ -212,7 +406,9 @@ func TestRuntimeErrors(t *testing.T) {
 
 	// 除零错误: 5 / 0
 	divZeroExpr := ast.NewBinary(ast.NewLiteral(5.0), token.NewToken(token.SLASH, "/", nil, 1), ast.NewLiteral(0.0))
-	interpreter.Interpret(divZeroExpr)
+	statements = []ast.Stmt{ast.NewExpression(divZeroExpr)}
+	interpreter.Interpret(statements)
+
 	if len(errorReporter.Errors) == 0 {
 		t.Errorf("期望除零错误")
 	}
@@ -220,7 +416,9 @@ func TestRuntimeErrors(t *testing.T) {
 
 	// 变量未定义错误
 	varExpr := ast.NewVariable(token.NewToken(token.IDENTIFIER, "x", nil, 1))
-	interpreter.Interpret(varExpr)
+	statements = []ast.Stmt{ast.NewExpression(varExpr)}
+	interpreter.Interpret(statements)
+
 	if len(errorReporter.Errors) == 0 {
 		t.Errorf("期望变量未定义错误")
 	}

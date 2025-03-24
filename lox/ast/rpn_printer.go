@@ -93,3 +93,28 @@ func (p *RpnPrinter) VisitTernaryExpr(expr *Ternary) interface{} {
 func (p *RpnPrinter) VisitVariableExpr(expr *Variable) interface{} {
 	return expr.Name.Lexeme
 }
+
+// VisitAssignExpr 访问赋值表达式
+func (p *RpnPrinter) VisitAssignExpr(expr *Assign) interface{} {
+	var builder strings.Builder
+
+	builder.WriteString(expr.Value.Accept(p).(string))
+	builder.WriteString(" ")
+	builder.WriteString(expr.Name.Lexeme)
+	builder.WriteString(" =")
+
+	return builder.String()
+}
+
+// VisitLogicalExpr 访问逻辑表达式
+func (p *RpnPrinter) VisitLogicalExpr(expr *Logical) interface{} {
+	var builder strings.Builder
+
+	builder.WriteString(expr.Left.Accept(p).(string))
+	builder.WriteString(" ")
+	builder.WriteString(expr.Right.Accept(p).(string))
+	builder.WriteString(" ")
+	builder.WriteString(expr.Operator.Lexeme)
+
+	return builder.String()
+}
