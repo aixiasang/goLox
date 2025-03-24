@@ -1,0 +1,63 @@
+// 这是一个测试文件，用于测试扫描器的功能
+
+/* 
+  这是一个C风格的多行注释
+  支持多行
+*/
+
+// 变量声明和赋值
+var a = 123;
+var b = 45.67;
+var name = "Hello, world!";
+var isTrue = true;
+var isFalse = false;
+var nothing = nil;
+
+/* 嵌套注释示例
+   /* 这是一个嵌套的注释 */
+   注释继续
+*/
+
+// 表达式
+var sum = 1 + 2;
+var multiply = 3 * 4;
+var complex = (1 + 2) * (3 - 4) / 5;
+
+// 条件语句
+if (isTrue) {
+  print "This is true!";
+} else {
+  print "This is false!";
+}
+
+// 循环
+var count = 0;
+while (count < 5) {
+  print count;
+  count = count + 1;
+}
+
+for (var i = 0; i < 5; i = i + 1) {
+  print i;
+}
+
+// 函数定义和调用
+fun sayHello(name) {
+  print "Hello, " + name + "!";
+}
+
+sayHello("Lox");
+
+// 类定义
+class Person {
+  init(name) {
+    this.name = name;
+  }
+
+  sayName() {
+    print "My name is " + this.name;
+  }
+}
+
+var john = Person("John");
+john.sayName(); 
